@@ -10,3 +10,4 @@ ktor:
       #- at.ac.hcw.RabbitmqKt.configureRabbitmq
       - at.ac.hcw.ResourcesKt.configureResources
       - at.ac.hcw.RoutingKt.configureRouting
+      - at.ac.hcw.OpenApiKt.configureOpenApi
