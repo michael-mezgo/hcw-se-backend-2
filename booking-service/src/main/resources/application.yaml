@@ -1,0 +1,12 @@
+ktor:
+  deployment:
+    port: 8080
+  application:
+    modules:
+      - at.ac.hcw.HttpKt.configureHttp
+      - at.ac.hcw.SerializationKt.configureSerialization
+      - at.ac.hcw.SecurityKt.configureSecurity
+      #- at.ac.hcw.MongoKt.configureMongo
+      #- at.ac.hcw.RabbitmqKt.configureRabbitmq
+      - at.ac.hcw.ResourcesKt.configureResources
+      - at.ac.hcw.RoutingKt.configureRouting
