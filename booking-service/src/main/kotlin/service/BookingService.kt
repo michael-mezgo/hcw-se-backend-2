@@ -1,8 +1,8 @@
 package at.ac.hcw.service
 
-import at.ac.hcw.Exceptions.CarAlreadyBookedException
-import at.ac.hcw.Exceptions.CarNotFoundException
-import at.ac.hcw.Exceptions.UserNotFoundException
+import at.ac.hcw.exceptions.CarAlreadyBookedException
+import at.ac.hcw.exceptions.CarNotFoundException
+import at.ac.hcw.exceptions.UserNotFoundException
 import at.ac.hcw.dto.*
 import at.ac.hcw.model.Booking
 import at.ac.hcw.repository.BookingRepositoryInterface
@@ -22,6 +22,9 @@ class BookingService(
 
         return repository.insert(request.userId, request.carId)
     }
+
+    suspend fun findById(id: String): Booking? =
+        repository.findById(id)
 
     suspend fun cancel(id: String): Booking? =
         repository.deleteById(id)

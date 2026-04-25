@@ -3,9 +3,9 @@ ktor:
     port: 8083
   application:
     modules:
+      - at.ac.hcw.SecurityKt.configureSecurity
       - at.ac.hcw.HttpKt.configureHttp
       - at.ac.hcw.SerializationKt.configureSerialization
-      - at.ac.hcw.SecurityKt.configureSecurity
       - at.ac.hcw.MongoKt.configureMongo
       - at.ac.hcw.RabbitmqKt.configureRabbitmq
       - at.ac.hcw.RoutingKt.configureRouting

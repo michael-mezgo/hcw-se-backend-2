@@ -21,6 +21,10 @@ class MongoBookingRepository(database: MongoDatabase) : BookingRepositoryInterfa
         Booking(id = doc["_id"].toString(), userId = userId, carId = carId)
     }
 
+    override suspend fun findById(id: String): Booking? = withContext(Dispatchers.IO) {
+        collection.find(Filters.eq("_id", ObjectId(id))).first()?.toBooking()
+    }
+
     override suspend fun deleteById(id: String): Booking? = withContext(Dispatchers.IO) {
         collection.findOneAndDelete(Filters.eq("_id", ObjectId(id)))?.toBooking()
     }
