@@ -1,8 +1,8 @@
 package at.ac.hcw.service
 
-import at.ac.hcw.repository.KnownEntitiesRepository
+import at.ac.hcw.repository.KnownEntitiesRepositoryInterface
 
-class KnownEntitiesService(private val repository: KnownEntitiesRepository) {
+class KnownEntitiesService(private val repository: KnownEntitiesRepositoryInterface) {
 
     suspend fun addUser(userId: String) {
         if (!repository.findUser(userId)) repository.insertUser(userId)

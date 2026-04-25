@@ -1,6 +1,9 @@
 package at.ac.hcw.routes
 
 import at.ac.hcw.dto.*
+import at.ac.hcw.model.toCancelledEvent
+import at.ac.hcw.model.toCreatedEvent
+import at.ac.hcw.model.toResponse
 import at.ac.hcw.service.BookingService
 import io.github.smiley4.ktorswaggerui.dsl.routing.delete
 import io.github.smiley4.ktorswaggerui.dsl.routing.get
@@ -36,9 +39,9 @@ fun Route.bookingRoutes(
             }
         }) {
             try {
-                val response = bookingService.create(call.receive())
-                onBookingCreated(BookingCreatedEvent(response.id, response.userId, response.carId))
-                call.respond(HttpStatusCode.Created, response)
+                val booking = bookingService.create(call.receive())
+                onBookingCreated(booking.toCreatedEvent())
+                call.respond(HttpStatusCode.Created, booking.toResponse())
             } catch (e: UserNotFoundException) {
                 call.respond(HttpStatusCode.NotFound, e.message ?: "User not found")
             } catch (e: CarNotFoundException) {
@@ -72,8 +75,8 @@ fun Route.bookingRoutes(
             val cancelled = bookingService.cancel(id)
                 ?: return@delete call.respond(HttpStatusCode.NotFound, "Booking not found")
 
-            onBookingCancelled(BookingCancelledEvent(cancelled.id, cancelled.carId))
-            call.respond(HttpStatusCode.OK, cancelled)
+            onBookingCancelled(cancelled.toCancelledEvent())
+            call.respond(HttpStatusCode.OK, cancelled.toResponse())
         }
 
         get({
@@ -96,7 +99,7 @@ fun Route.bookingRoutes(
             val userId = call.request.queryParameters["userId"]
                 ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing userId query parameter")
 
-            call.respond(HttpStatusCode.OK, bookingService.findByUser(userId))
+            call.respond(HttpStatusCode.OK, bookingService.findByUser(userId).map { it.toResponse() })
         }
     }
 }

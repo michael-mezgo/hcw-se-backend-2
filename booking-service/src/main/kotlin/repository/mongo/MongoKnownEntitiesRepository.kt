@@ -1,38 +1,41 @@
-package at.ac.hcw.repository
+package at.ac.hcw.repository.mongo
 
+import at.ac.hcw.repository.KnownEntitiesRepositoryInterface
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters
-import com.mongodb.client.result.DeleteResult
-import com.mongodb.client.result.InsertOneResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bson.Document
 
-class KnownEntitiesRepository(database: MongoDatabase) {
+class MongoKnownEntitiesRepository(database: MongoDatabase) : KnownEntitiesRepositoryInterface {
     private val usersCollection = database.getCollection("known_users")
     private val carsCollection = database.getCollection("known_cars")
 
-    suspend fun insertUser(userId: String): InsertOneResult = withContext(Dispatchers.IO) {
+    override suspend fun insertUser(userId: String) = withContext(Dispatchers.IO) {
         usersCollection.insertOne(Document("userId", userId))
+        Unit
     }
 
-    suspend fun deleteUser(userId: String): DeleteResult = withContext(Dispatchers.IO) {
+    override suspend fun deleteUser(userId: String) = withContext(Dispatchers.IO) {
         usersCollection.deleteOne(Filters.eq("userId", userId))
+        Unit
     }
 
-    suspend fun findUser(userId: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun findUser(userId: String): Boolean = withContext(Dispatchers.IO) {
         usersCollection.find(Filters.eq("userId", userId)).first() != null
     }
 
-    suspend fun insertCar(carId: String): InsertOneResult = withContext(Dispatchers.IO) {
+    override suspend fun insertCar(carId: String) = withContext(Dispatchers.IO) {
         carsCollection.insertOne(Document("carId", carId))
+        Unit
     }
 
-    suspend fun deleteCar(carId: String): DeleteResult = withContext(Dispatchers.IO) {
+    override suspend fun deleteCar(carId: String) = withContext(Dispatchers.IO) {
         carsCollection.deleteOne(Filters.eq("carId", carId))
+        Unit
     }
 
-    suspend fun findCar(carId: String): Boolean = withContext(Dispatchers.IO) {
+    override suspend fun findCar(carId: String): Boolean = withContext(Dispatchers.IO) {
         carsCollection.find(Filters.eq("carId", carId)).first() != null
     }
 }

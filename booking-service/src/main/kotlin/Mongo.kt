@@ -1,7 +1,7 @@
 package at.ac.hcw
 
-import at.ac.hcw.repository.BookingRepository
-import at.ac.hcw.repository.KnownEntitiesRepository
+import at.ac.hcw.repository.mongo.MongoBookingRepository
+import at.ac.hcw.repository.mongo.MongoKnownEntitiesRepository
 import at.ac.hcw.service.BookingService
 import at.ac.hcw.service.KnownEntitiesService
 import com.mongodb.client.MongoClients
@@ -16,10 +16,10 @@ val KnownEntitiesServiceKey = AttributeKey<KnownEntitiesService>("KnownEntitiesS
 fun Application.configureMongo() {
     val db = connectToMongoDB()
 
-    val knownEntitiesRepository = KnownEntitiesRepository(db)
+    val knownEntitiesRepository = MongoKnownEntitiesRepository(db)
     val knownEntitiesService = KnownEntitiesService(knownEntitiesRepository)
 
-    val bookingRepository = BookingRepository(db)
+    val bookingRepository = MongoBookingRepository(db)
     val bookingService = BookingService(bookingRepository, knownEntitiesService)
 
     attributes.put(KnownEntitiesServiceKey, knownEntitiesService)
