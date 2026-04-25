@@ -1,101 +1,126 @@
 package at.ac.hcw
 
+import at.ac.hcw.dto.CarEvent
+import at.ac.hcw.dto.UserEvent
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.RabbitMQ
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.*
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.rabbitMQ
 import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.server.config.tryGetString
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.serialization.json.Json
 
 fun Application.configureRabbitmq() {
-    val exceptionHandler = CoroutineExceptionHandler { _, throwable -> log.error("ExceptionHandler got $throwable") }
+    val knownEntities = attributes[KnownEntitiesServiceKey]
+    val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        log.error("RabbitMQ error: $throwable")
+    }
     val rabbitMQScope = CoroutineScope(SupervisorJob() + exceptionHandler)
 
     install(RabbitMQ) {
-        uri = "amqp://guest:guest@localhost:5672"
-        defaultConnectionName = "default-connection"
+        uri = environment.config.tryGetString("rabbitmq.uri") ?: "amqp://guest:guest@localhost:5672"
+        defaultConnectionName = "booking-service-connection"
         dispatcherThreadPollSize = 4
         tlsEnabled = false
-        scope = rabbitMQScope // custom scope, default is the one provided by Ktor
+        scope = rabbitMQScope
     }
 
+    // Declare exchanges
+    rabbitmq { exchangeDeclare { exchange = "user-events"; type = "topic"; durable = true } }
+    rabbitmq { exchangeDeclare { exchange = "car-events"; type = "topic"; durable = true } }
+    rabbitmq { exchangeDeclare { exchange = "booking-events"; type = "topic"; durable = true } }
+
+    // Bind queues for user events
     rabbitmq {
         queueBind {
-            queue = "dlq"
-            exchange = "dlx"
-            routingKey = "dlq-dlx"
-            exchangeDeclare {
-                exchange = "dlx"
-                type = "direct"
-            }
-            queueDeclare {
-                queue = "dlq"
-                durable = true
-            }
+            queue = "booking-service.user.created"
+            exchange = "user-events"
+            routingKey = "user.created"
+            queueDeclare { queue = "booking-service.user.created"; durable = true }
         }
     }
-
     rabbitmq {
         queueBind {
-            queue = "test-queue"
-            exchange = "test-exchange"
-            routingKey = "test-routing-key"
-            exchangeDeclare {
-                exchange = "test-exchange"
-                type = "direct"
-            }
-            queueDeclare {
-                queue = "test-queue"
-                arguments = mapOf(
-                    "x-dead-letter-exchange" to "dlx",
-                    "x-dead-letter-routing-key" to "dlq-dlx"
-                )
+            queue = "booking-service.user.deleted"
+            exchange = "user-events"
+            routingKey = "user.deleted"
+            queueDeclare { queue = "booking-service.user.deleted"; durable = true }
+        }
+    }
+
+    // Bind queues for car events
+    rabbitmq {
+        queueBind {
+            queue = "booking-service.car.created"
+            exchange = "car-events"
+            routingKey = "car.created"
+            queueDeclare { queue = "booking-service.car.created"; durable = true }
+        }
+    }
+    rabbitmq {
+        queueBind {
+            queue = "booking-service.car.deleted"
+            exchange = "car-events"
+            routingKey = "car.deleted"
+            queueDeclare { queue = "booking-service.car.deleted"; durable = true }
+        }
+    }
+
+    // Consume user.created
+    rabbitmq {
+        basicConsume {
+            autoAck = true
+            queue = "booking-service.user.created"
+            dispatcher = Dispatchers.rabbitMQ
+            deliverCallback<String> { message ->
+                val event = Json.decodeFromString<UserEvent>(message.body)
+                knownEntities.addUser(event.userId)
+                log.info("User added to cache: ${event.userId}")
             }
         }
     }
 
-    routing {
-        rabbitmq {
-            get("/rabbitmq") {
-                basicPublish {
-                    exchange = "test-exchange"
-                    routingKey = "test-routing-key"
-                    properties = basicProperties {
-                        correlationId = "jetbrains"
-                        type = "plugin"
-                        headers = mapOf("ktor" to "rabbitmq")
-                    }
-                    message { "Hello Ktor!" }
-                }
-
-                call.respondText("Hello RabbitMQ!")
+    // Consume user.deleted
+    rabbitmq {
+        basicConsume {
+            autoAck = true
+            queue = "booking-service.user.deleted"
+            dispatcher = Dispatchers.rabbitMQ
+            deliverCallback<String> { message ->
+                val event = Json.decodeFromString<UserEvent>(message.body)
+                knownEntities.removeUser(event.userId)
+                log.info("User removed from cache: ${event.userId}")
             }
         }
+    }
 
-        rabbitmq {
-            basicConsume {
-                autoAck = true
-                queue = "test-queue"
-                dispatcher = Dispatchers.rabbitMQ
-                coroutinePollSize = 100
+    // Consume car.created
+    rabbitmq {
+        basicConsume {
+            autoAck = true
+            queue = "booking-service.car.created"
+            dispatcher = Dispatchers.rabbitMQ
+            deliverCallback<String> { message ->
+                val event = Json.decodeFromString<CarEvent>(message.body)
+                knownEntities.addCar(event.carId)
+                log.info("Car added to cache: ${event.carId}")
+            }
+        }
+    }
 
-                // If an exception is not properly handled in your business logic,
-                // it will be caught by the default Ktor coroutine scope.
-                // By defining your own coroutine scope, you gain more flexibility in handling exceptions.
-                deliverCallback<String> { message ->
-                    log.info("Received message: $message")
-                    error("Error during message processing: $message")
-                }
-
-                // Define a callback to handle deserialization failures.
-                // For example, you could redirect such messages to a dead-letter queue.
-                deliverFailureCallback { message ->
-                    log.info("Received undeliverable message (deserialization failed): ${message.body.toString(Charsets.UTF_8)}")
-                }
+    // Consume car.deleted
+    rabbitmq {
+        basicConsume {
+            autoAck = true
+            queue = "booking-service.car.deleted"
+            dispatcher = Dispatchers.rabbitMQ
+            deliverCallback<String> { message ->
+                val event = Json.decodeFromString<CarEvent>(message.body)
+                knownEntities.removeCar(event.carId)
+                log.info("Car removed from cache: ${event.carId}")
             }
         }
     }

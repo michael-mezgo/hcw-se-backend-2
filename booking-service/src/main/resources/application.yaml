@@ -1,13 +1,22 @@
 ktor:
   deployment:
-    port: 8080
+    port: 8083
   application:
     modules:
       - at.ac.hcw.HttpKt.configureHttp
       - at.ac.hcw.SerializationKt.configureSerialization
       - at.ac.hcw.SecurityKt.configureSecurity
-      #- at.ac.hcw.MongoKt.configureMongo
-      #- at.ac.hcw.RabbitmqKt.configureRabbitmq
-      - at.ac.hcw.ResourcesKt.configureResources
+      - at.ac.hcw.MongoKt.configureMongo
+      - at.ac.hcw.RabbitmqKt.configureRabbitmq
       - at.ac.hcw.RoutingKt.configureRouting
       - at.ac.hcw.OpenApiKt.configureOpenApi
+
+db:
+  mongo:
+    host: localhost
+    port: 27019
+    database:
+      name: booking-service
+
+rabbitmq:
+  uri: amqp://guest:guest@localhost:5672
