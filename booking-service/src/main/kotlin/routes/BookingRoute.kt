@@ -1,5 +1,8 @@
 package at.ac.hcw.routes
 
+import at.ac.hcw.Exceptions.CarAlreadyBookedException
+import at.ac.hcw.Exceptions.CarNotFoundException
+import at.ac.hcw.Exceptions.UserNotFoundException
 import at.ac.hcw.dto.*
 import at.ac.hcw.model.toCancelledEvent
 import at.ac.hcw.model.toCreatedEvent

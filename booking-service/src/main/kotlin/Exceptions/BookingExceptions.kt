@@ -1,4 +1,4 @@
-package at.ac.hcw.dto
+package at.ac.hcw.Exceptions
 
 class UserNotFoundException(userId: String) : Exception("User not found: $userId")
 class CarNotFoundException(carId: String) : Exception("Car not found: $carId")

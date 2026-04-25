@@ -11,5 +11,5 @@ data class Booking(
 )
 
 fun Booking.toResponse() = BookingResponse(id = id, userId = userId, carId = carId)
-fun Booking.toCreatedEvent() = BookingCreatedEvent(bookingId = id, userId = userId, carId = carId)
+fun Booking.toCreatedEvent() = BookingCreatedEvent(bookingId = id, carId = carId)
 fun Booking.toCancelledEvent() = BookingCancelledEvent(bookingId = id, carId = carId)

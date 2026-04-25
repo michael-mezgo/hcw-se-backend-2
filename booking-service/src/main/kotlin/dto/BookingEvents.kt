@@ -3,14 +3,13 @@ package at.ac.hcw.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class BookingRequest(
-    val userId: String,
+data class BookingCreatedEvent(
+    val bookingId: String,
     val carId: String
 )
 
 @Serializable
-data class BookingResponse(
-    val id: String,
-    val userId: String,
+data class BookingCancelledEvent(
+    val bookingId: String,
     val carId: String
 )
