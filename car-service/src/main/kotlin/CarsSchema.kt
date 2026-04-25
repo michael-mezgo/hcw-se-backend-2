@@ -1,3 +1,4 @@
+/*
 package at.ac.hcw
 
 import com.mongodb.client.MongoCollection
@@ -23,8 +24,10 @@ data class Car(
     val transmission: String,
     val power: Int,
     val fuelType: String,
+*/
 /*    val bookedBy: User?,
-    val location: Coordinate*/
+    val location: Coordinate*//*
+
 ) {
     fun toDocument(): Document = Document.parse(Json.encodeToString(this))
 
@@ -101,4 +104,11 @@ class CarService(private val database: MongoDatabase) {
     suspend fun deleteCar(id: String): Document? = withContext(Dispatchers.IO) {
         collection.findOneAndDelete(Filters.eq("_id", ObjectId(id)))
     }
+
+    suspend fun markCarAsBooked(carId: String): Boolean =
+        carRepository.setAvailability(carId, false)
+
+    suspend fun markCarAsAvailable(carId: String): Boolean =
+        carRepository.setAvailability(carId, true)
 }
+*/

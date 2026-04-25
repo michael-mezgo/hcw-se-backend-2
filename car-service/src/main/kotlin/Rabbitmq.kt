@@ -1,100 +1,91 @@
 package at.ac.hcw
 
+import at.ac.hcw.dto.BookingCreatedEvent
+import at.ac.hcw.dto.BookingDeletedEvent
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.RabbitMQ
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.*
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.rabbitMQ
 import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import io.ktor.server.config.*
+import kotlinx.coroutines.*
+import kotlinx.serialization.json.Json
 
 fun Application.configureRabbitmq() {
+    val carService = attributes[CarServiceKey]
     val exceptionHandler = CoroutineExceptionHandler { _, throwable -> log.error("ExceptionHandler got $throwable") }
     val rabbitMQScope = CoroutineScope(SupervisorJob() + exceptionHandler)
 
     install(RabbitMQ) {
-        uri = "amqp://guest:guest@localhost:5672"
+        uri = environment.config.tryGetString("rabbitmq.uri") ?: "amqp://guest:guest@localhost:5672"
         defaultConnectionName = "default-connection"
         dispatcherThreadPollSize = 4
         tlsEnabled = false
         scope = rabbitMQScope // custom scope, default is the one provided by Ktor
     }
 
+    rabbitmq { exchangeDeclare { exchange = "car-events"; type = "topic"; durable = true } }
+    rabbitmq { exchangeDeclare { exchange = "booking-events"; type = "topic"; durable = true } }
+
+// Bind queues for booking events
     rabbitmq {
         queueBind {
-            queue = "dlq"
-            exchange = "dlx"
-            routingKey = "dlq-dlx"
-            exchangeDeclare {
-                exchange = "dlx"
-                type = "direct"
-            }
-            queueDeclare {
-                queue = "dlq"
-                durable = true
-            }
+            queue = "car-service.booking.created"
+            exchange = "booking-events"
+            routingKey = "booking.created"
+            queueDeclare { queue = "car-service.booking.created"; durable = true }
+        }
+    }
+    rabbitmq {
+        queueBind {
+            queue = "car-service.booking.deleted"
+            exchange = "booking-events"
+            routingKey = "booking.deleted"
+            queueDeclare { queue = "car-service.booking.deleted"; durable = true }
         }
     }
 
-    rabbitmq {
-        queueBind {
-            queue = "test-queue"
-            exchange = "test-exchange"
-            routingKey = "test-routing-key"
-            exchangeDeclare {
-                exchange = "test-exchange"
-                type = "direct"
-            }
-            queueDeclare {
-                queue = "test-queue"
-                arguments = mapOf(
-                    "x-dead-letter-exchange" to "dlx",
-                    "x-dead-letter-routing-key" to "dlq-dlx"
-                )
-            }
-        }
+    // Consume booking.created
+    val eventJson = Json {
+        ignoreUnknownKeys = true
     }
-
-    routing {
-        rabbitmq {
-            get("/rabbitmq") {
-                basicPublish {
-                    exchange = "test-exchange"
-                    routingKey = "test-routing-key"
-                    properties = basicProperties {
-                        correlationId = "jetbrains"
-                        type = "plugin"
-                        headers = mapOf("ktor" to "rabbitmq")
+    val consumerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    monitor.subscribe(ApplicationStopped) {
+        consumerScope.cancel()
+    }
+    rabbitmq {
+        basicConsume {
+            autoAck = true
+            queue = "car-service.booking.created"
+            dispatcher = Dispatchers.rabbitMQ
+            deliverCallback<String> { message ->
+                val event = eventJson.decodeFromString<BookingCreatedEvent>(message.body)
+                consumerScope.launch {
+                    val success = carService.markCarAsBooked(event.carId)
+                    if (success) {
+                        log.info("Car is booked: ${event.carId}")
+                    } else {
+                        log.warn("Failed to mark car as booked: ${event.carId}")
                     }
-                    message { "Hello Ktor!" }
                 }
-
-                call.respondText("Hello RabbitMQ!")
             }
         }
+    }
 
-        rabbitmq {
-            basicConsume {
-                autoAck = true
-                queue = "test-queue"
-                dispatcher = Dispatchers.rabbitMQ
-                coroutinePollSize = 100
-
-                // If an exception is not properly handled in your business logic,
-                // it will be caught by the default Ktor coroutine scope.
-                // By defining your own coroutine scope, you gain more flexibility in handling exceptions.
-                deliverCallback<String> { message ->
-                    log.info("Received message: $message")
-                    error("Error during message processing: $message")
-                }
-
-                // Define a callback to handle deserialization failures.
-                // For example, you could redirect such messages to a dead-letter queue.
-                deliverFailureCallback { message ->
-                    log.info("Received undeliverable message (deserialization failed): ${message.body.toString(Charsets.UTF_8)}")
+// Consume user.deleted
+    rabbitmq {
+        basicConsume {
+            autoAck = true
+            queue = "car-service.booking.deleted"
+            dispatcher = Dispatchers.rabbitMQ
+            deliverCallback<String> { message ->
+                val event = eventJson.decodeFromString<BookingDeletedEvent>(message.body)
+                consumerScope.launch {
+                    val success = carService.markCarAsAvailable(event.carId)
+                    if (success) {
+                        log.info("Car is available: ${event.carId}")
+                    } else {
+                        log.warn("Failed to mark car as available: ${event.carId}")
+                    }
                 }
             }
         }
