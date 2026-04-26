@@ -1,6 +1,6 @@
 ktor:
   deployment:
-    port: 8083
+    port: ${PORT}
   application:
     modules:
       - at.ac.hcw.SecurityKt.configureSecurity
@@ -13,10 +13,13 @@ ktor:
 
 db:
   mongo:
-    host: localhost
-    port: 27019
+    host: ${MONGO_HOST}
+    port: ${MONGO_PORT}
     database:
-      name: booking-service
+      name: ${MONGO_DB}
 
 rabbitmq:
-  uri: amqp://guest:guest@localhost:5672
+  uri: ${RABBITMQ_URI}
+
+jwt:
+  secret: ${JWT_SECRET}
