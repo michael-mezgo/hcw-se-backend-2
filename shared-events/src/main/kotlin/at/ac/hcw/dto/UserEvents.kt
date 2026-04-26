@@ -3,4 +3,4 @@ package at.ac.hcw.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CarEvent(val carId: String)
+data class UserEvent(val userId: String)
