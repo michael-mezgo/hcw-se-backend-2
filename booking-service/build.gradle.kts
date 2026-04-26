@@ -34,6 +34,7 @@ dependencies {
     implementation(libs.mongodb.driverCore)
     implementation(libs.mongodb.driverSync)
     implementation("io.github.smiley4:ktor-swagger-ui:${swagger_ui_version}")
+    implementation("at.ac.hcw:shared-events:1.0.0-SNAPSHOT")
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
 }

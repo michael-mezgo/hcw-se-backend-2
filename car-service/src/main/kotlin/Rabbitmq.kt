@@ -1,7 +1,7 @@
 package at.ac.hcw
 
 import at.ac.hcw.dto.BookingCreatedEvent
-import at.ac.hcw.dto.BookingDeletedEvent
+import at.ac.hcw.dto.BookingCancelledEvent
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.RabbitMQ
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.*
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.rabbitMQ
@@ -78,7 +78,7 @@ fun Application.configureRabbitmq() {
             queue = "car-service.booking.deleted"
             dispatcher = Dispatchers.rabbitMQ
             deliverCallback<String> { message ->
-                val event = eventJson.decodeFromString<BookingDeletedEvent>(message.body)
+                val event = eventJson.decodeFromString<BookingCancelledEvent>(message.body)
                 consumerScope.launch {
                     val success = carService.markCarAsAvailable(event.carId)
                     if (success) {

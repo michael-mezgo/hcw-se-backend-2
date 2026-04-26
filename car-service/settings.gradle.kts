@@ -1,5 +1,6 @@
 rootProject.name = "car-service"
 
+includeBuild("../shared-events")
 pluginManagement {
     repositories {
         mavenCentral()

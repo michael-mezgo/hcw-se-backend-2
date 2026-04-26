@@ -9,7 +9,7 @@ data class BookingCreatedEvent(
 )
 
 @Serializable
-data class BookingDeletedEvent(
+data class BookingCancelledEvent(
     val bookingId: String,
     val carId: String
 )
