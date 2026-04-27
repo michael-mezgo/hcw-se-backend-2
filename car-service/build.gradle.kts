@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(ktorLibs.plugins.ktor)
     alias(libs.plugins.kotlin.serialization)
+    id("com.google.protobuf") version "0.9.4"
 }
 
 group = "at.ac.hcw"
@@ -15,6 +16,7 @@ application {
 kotlin {
     jvmToolchain(21)
 }
+
 dependencies {
     implementation(ktorLibs.serialization.kotlinx.json)
     implementation(ktorLibs.server.auth)
@@ -33,7 +35,36 @@ dependencies {
     implementation(libs.mongodb.driverCore)
     implementation(libs.mongodb.driverSync)
     implementation("at.ac.hcw:shared-events:1.0.0-SNAPSHOT")
+    implementation(libs.grpc.kotlin.stub)
+    implementation(libs.grpc.netty.shaded)
+    implementation(libs.grpc.protobuf)
+    implementation(libs.protobuf.kotlin)
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.25.5"
+    }
+    plugins {
+        create("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.68.1"
+        }
+        create("grpckt") {
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:1.4.1:jdk8@jar"
+        }
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.plugins {
+                create("grpc")
+                create("grpckt")
+            }
+            task.builtins {
+                create("kotlin")
+            }
+        }
+    }
 }

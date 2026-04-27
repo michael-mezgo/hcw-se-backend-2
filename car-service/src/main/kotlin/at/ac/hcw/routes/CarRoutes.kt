@@ -1,31 +1,34 @@
 package at.ac.hcw.routes
 
-import at.ac.hcw.dto.CarCreateRequest
-import at.ac.hcw.dto.CarEvent
-import at.ac.hcw.dto.CarPatchRequest
-import at.ac.hcw.dto.toDomain
-import at.ac.hcw.dto.toResponse
+import at.ac.hcw.dto.*
 import at.ac.hcw.service.CarService
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Routing
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.patch
-import io.ktor.server.routing.post
-import io.ktor.server.routing.route
+import currency.CurrencyServiceGrpcKt
+import io.ktor.http.*
+import io.ktor.server.plugins.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 fun Routing.carRoutes(
     carService: CarService,
+    currencyClient: CurrencyServiceGrpcKt.CurrencyServiceCoroutineStub? = null,
     onCarCreated: suspend (CarEvent) -> Unit = {},
     onCarDeleted: suspend (CarEvent) -> Unit = {},
 ) {
+    //TODO: Armin use SMILEY4 endpoints (DOCU)
     route("/cars") {
         get {
-            val cars = carService.getAllCars()
-                .map { it.toResponse() }
-            call.respond(HttpStatusCode.OK, cars)
+            val currency = call.request.queryParameters["currency"] ?: "USD"
+
+            try {
+                val cars = carService.getAllCars()
+                    .map { it.toResponse(currencyClient, currency) }
+                call.respond(HttpStatusCode.OK, cars)
+            }
+            catch (e: BadRequestException) {
+                call.respond(HttpStatusCode.BadRequest, e.message ?: "")
+            }
+
         }
 
         get("/{id}") {
@@ -34,11 +37,18 @@ fun Routing.carRoutes(
                 call.respond(HttpStatusCode.BadRequest, "Missing car id")
                 return@get
             }
+            val currency = call.request.queryParameters["currency"] ?: "USD"
             val car = carService.getCar(id)
             if (car == null) {
                 call.respond(HttpStatusCode.NotFound, "No Car with id $id found")
-            } else {
-                call.respond(HttpStatusCode.OK, car.toResponse())
+                return@get
+            }
+
+            try {
+                val response = car.toResponse(currencyClient, currency)
+                call.respond(HttpStatusCode.OK, response)
+            } catch (e: BadRequestException) {
+                call.respond(HttpStatusCode.BadRequest, e.message ?: "Invalid request")
             }
         }
 
@@ -59,8 +69,14 @@ fun Routing.carRoutes(
             val updatedCar = carService.patchCar(id, patchRequest)
             if (updatedCar == null) {
                 call.respond(HttpStatusCode.NotFound, "No Car with id $id found")
-            } else {
-                call.respond(HttpStatusCode.OK, updatedCar.toResponse())
+                return@patch
+            }
+
+            try {
+                val response = updatedCar.toResponse(currencyClient)
+                call.respond(HttpStatusCode.OK, response)
+            } catch (e: BadRequestException) {
+                call.respond(HttpStatusCode.BadRequest, e.message ?: "Invalid request")
             }
         }
 

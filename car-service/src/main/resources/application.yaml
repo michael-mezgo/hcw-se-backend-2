@@ -10,6 +10,7 @@ ktor:
       - at.ac.hcw.RabbitmqKt.configureRabbitmq
       - at.ac.hcw.ResourcesKt.configureResources
       - at.ac.hcw.RoutingKt.configureRouting
+      - at.ac.hcw.GrpcKt.configureGrpc
 
 db:
   mongo:
@@ -17,6 +18,11 @@ db:
     port: 27018
     database:
         name: car-service
+
+grpc:
+  currency:
+    host: localhost
+    port: 5125
 
 rabbitmq:
   uri: amqp://guest:guest@localhost:5672
