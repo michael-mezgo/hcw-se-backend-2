@@ -18,6 +18,7 @@ kotlin {
     jvmToolchain(21)
 }
 dependencies {
+    implementation("at.ac.hcw:shared-events:1.0.0-SNAPSHOT")
     implementation(ktorLibs.serialization.kotlinx.json)
     implementation(ktorLibs.server.auth)
     implementation(ktorLibs.server.auth.jwt)

@@ -1,5 +1,7 @@
 rootProject.name = "user-service"
 
+includeBuild("../shared-events")
+
 pluginManagement {
     repositories {
         mavenCentral()
