@@ -18,6 +18,7 @@ fun Route.userRoutes(
     onUserCreated: suspend (UserEvent) -> Unit = {},
     onUserDeleted: suspend (UserEvent) -> Unit = {}
 ) {
+    //TODO: Document SMILEY4 endpoints (documentation)
 
     // ── AUTH ─────────────────────────────────────────────
     route("/auth") {
@@ -45,6 +46,7 @@ fun Route.userRoutes(
 
         post("/login", {
             tags("Auth")
+            //TODO: Documentation
         }) {
             val credentials = call.receive<UserLoginRequest>()
             val response = authService.login(credentials)
@@ -60,6 +62,7 @@ fun Route.userRoutes(
             // GET PROFILE
             get({
                 tags("Users")
+                //TODO: Documentation
             }) {
                 val principal = call.principal<JwtPrincipal>()!!
                 val user = userService.findById(principal.userId)
@@ -71,6 +74,7 @@ fun Route.userRoutes(
             // UPDATE PROFILE
             patch({
                 tags("Users")
+                //TODO: Documentation
             }) {
                 val principal = call.principal<JwtPrincipal>()!!
                 val update = call.receive<UserUpdate>()
@@ -84,6 +88,7 @@ fun Route.userRoutes(
             // DELETE (Soft oder Hard)
             delete({
                 tags("Users")
+                //TODO: Documentation
             }) {
                 val principal = call.principal<JwtPrincipal>()!!
 
@@ -105,6 +110,7 @@ fun Route.userRoutes(
             get({
                 tags("Users")
                 description = "Get all users (admin only)"
+                //TODO: Documentation
             }) {
                 val users = userService.findAll()
                 call.respond(HttpStatusCode.OK, users.map { it.toResponse() })
@@ -113,6 +119,7 @@ fun Route.userRoutes(
             delete("/{id}", {
                 tags("Users")
                 description = "Delete any user (admin only)"
+                //TODO: Documentation
             }) {
                 val id = call.parameters["id"]
                     ?: return@delete call.respond(HttpStatusCode.BadRequest, "Missing id")

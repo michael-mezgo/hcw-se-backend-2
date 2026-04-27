@@ -18,7 +18,7 @@ fun Route.adminRoutes(
     userService: UserService,
     onUserDeleted: suspend (UserEvent) -> Unit = {}
 ) {
-
+    //TODO: Fatima use SMILEY4 endpoints (documentation)
     authenticate("admin-jwt") {
 
         route("/users") {

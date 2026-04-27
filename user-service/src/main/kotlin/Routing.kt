@@ -12,6 +12,7 @@ fun Application.configureRouting() {
     val userService = attributes[UserServiceKey]
     val authService = attributes[AuthServiceKey]
     routing {
+        //TODO: Fatima - init admin routes
         userRoutes(
 
             userService = userService,
