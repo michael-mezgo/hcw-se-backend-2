@@ -1,0 +1,40 @@
+services:
+
+  rabbitmq:
+    image: rabbitmq:4.3.0-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo-user:
+    image: mongodb/mongodb-community-server:latest-slim
+    container_name: mongo-user
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: user-service
+
+  mongo-car:
+    image: mongodb/mongodb-community-server:latest-slim
+    container_name: mongo-car
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_DATABASE: car-service
+
+  mongo-booking:
+    image: mongodb/mongodb-community-server:latest-slim
+    container_name: mongo-booking
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_DATABASE: booking-service

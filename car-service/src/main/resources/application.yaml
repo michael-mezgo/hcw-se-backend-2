@@ -6,7 +6,17 @@ ktor:
       - at.ac.hcw.HttpKt.configureHttp
       - at.ac.hcw.SerializationKt.configureSerialization
       - at.ac.hcw.SecurityKt.configureSecurity
-      #- at.ac.hcw.MongoKt.configureMongo
-      #- at.ac.hcw.RabbitmqKt.configureRabbitmq
+      - at.ac.hcw.MongoKt.configureMongo
+      - at.ac.hcw.RabbitmqKt.configureRabbitmq
       - at.ac.hcw.ResourcesKt.configureResources
       - at.ac.hcw.RoutingKt.configureRouting
+
+db:
+  mongo:
+    host: localhost
+    port: 27018
+    database:
+        name: car-service
+
+rabbitmq:
+  uri: amqp://guest:guest@localhost:5672
