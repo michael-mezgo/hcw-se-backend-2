@@ -1,24 +1,45 @@
 package at.ac.hcw
 
+import at.ac.hcw.routes.userRoutes
+import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.basicPublish
+import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.rabbitmq
 import io.ktor.server.application.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.resources.*
-import io.ktor.server.resources.*
-import io.ktor.server.resources.Resources
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 fun Application.configureRouting() {
+    val app = this
+    val userService = attributes[UserServiceKey]
+    val authService = attributes[AuthServiceKey]
     routing {
-        get("/") {
-            call.respondText("Hello, World!")
-        }
-        get<Articles> { article ->
-            // Get all articles ...
-            call.respond("List of articles sorted starting from ${article.sort}")
-        }
-        get("/json/kotlinx-serialization") {
-            call.respond(mapOf("hello" to "world"))
-        }
+        userRoutes(
+
+            userService = userService,
+            authService = authService,
+
+            onUserCreated = { event ->
+                app.rabbitmq {
+                    basicPublish {
+                        exchange = "user-events"
+                        routingKey = "user.created"
+                        message {
+                            Json.encodeToString(event)
+                        }
+                    }
+                }
+            },
+
+            onUserDeleted = { event ->
+                app.rabbitmq {
+                    basicPublish {
+                        exchange = "user-events"
+                        routingKey = "user.deleted"
+                        message {
+                            Json.encodeToString(event)
+                        }
+                    }
+                }
+            }
+        )
     }
 }
