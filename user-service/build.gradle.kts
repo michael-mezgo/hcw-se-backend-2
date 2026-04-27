@@ -1,4 +1,5 @@
 val swagger_ui_version: String by project
+val jbcrypt_version: String by project
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -33,6 +34,7 @@ dependencies {
     implementation(libs.mongodb.bson)
     implementation(libs.mongodb.driverCore)
     implementation(libs.mongodb.driverSync)
+    implementation("org.mindrot:jbcrypt:${jbcrypt_version}")
 
     implementation("io.github.smiley4:ktor-swagger-ui:${swagger_ui_version}")
     testImplementation(kotlin("test"))

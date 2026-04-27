@@ -6,10 +6,14 @@ import at.ac.hcw.exceptions.UnauthorizedException
 import at.ac.hcw.exceptions.UserExistsException
 import at.ac.hcw.repository.UserRepository
 import at.ac.hcw.security.generateToken
+import org.mindrot.jbcrypt.BCrypt
 
 class AuthService(
     private val userRepository: UserRepository
 ) {
+    private fun hashPassword(password: String): String = BCrypt.hashpw(password, BCrypt.gensalt())
+
+    private fun checkPassword(password: String, hash: String): Boolean = BCrypt.checkpw(password, hash)
 
     fun register(dto: UserRegistration): DatabaseUser {
 
@@ -21,7 +25,7 @@ class AuthService(
         val user = DatabaseUser(
             username = dto.username,
             email = dto.email,
-            passwordHash = dto.password,
+            passwordHash = hashPassword(dto.password),
             firstName = dto.firstName,
             lastName = dto.lastName,
             licenseNumber = dto.licenseNumber,
@@ -37,7 +41,7 @@ class AuthService(
         val user = userRepository.findByUsername(dto.username)
             ?: throw UnauthorizedException(dto.username)
 
-        if (user.passwordHash != dto.password) {
+        if (checkPassword(dto.password, user.passwordHash)) {
             throw UnauthorizedException(dto.username)
         }
 

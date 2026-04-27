@@ -1,16 +1,16 @@
 package at.ac.hcw.service
 
-import at.ac.hcw.business.User
 import at.ac.hcw.dto.UserUpdate
 import at.ac.hcw.database.DatabaseUser
 import at.ac.hcw.dto.AdminUserCreate
 import at.ac.hcw.dto.AdminUserUpdate
 import at.ac.hcw.repository.UserRepository
-import org.bson.types.ObjectId
+import org.mindrot.jbcrypt.BCrypt
 
 class UserService(
     private val userRepository: UserRepository
 ) {
+    private fun hashPassword(password: String): String = BCrypt.hashpw(password, BCrypt.gensalt())
 
     fun findById(id: String): DatabaseUser? {
         return userRepository.findById(id)
@@ -25,6 +25,7 @@ class UserService(
 
         val updated = existing.copy(
             email = update.email ?: existing.email,
+            passwordHash = update.password?.let { hashPassword(it) } ?: existing.passwordHash,
             firstName = update.firstName ?: existing.firstName,
             lastName = update.lastName ?: existing.lastName,
             licenseNumber = update.licenseNumber ?: existing.licenseNumber,
@@ -45,12 +46,12 @@ class UserService(
 
     // ── ADMIN CREATE ──────────────────────────────────────
 
-    fun adminCreate(dto: AdminUserCreate): User {
+    fun adminCreate(dto: AdminUserCreate): DatabaseUser {
 
-        val user = User(
-            id = ObjectId().toHexString(),
+        val user = DatabaseUser(
             username = dto.username,
             email = dto.email,
+            passwordHash = hashPassword(dto.password),
             firstName = dto.firstName,
             lastName = dto.lastName,
             licenseNumber = dto.licenseNumber,
@@ -73,6 +74,7 @@ class UserService(
         val updated = existing.copy(
             email = dto.email ?: existing.email,
             firstName = dto.firstName ?: existing.firstName,
+            passwordHash = dto.password?.let { hashPassword(it) } ?: existing.passwordHash,
             lastName = dto.lastName ?: existing.lastName,
             licenseNumber = dto.licenseNumber ?: existing.licenseNumber,
             licenseValidUntil = dto.licenseValidUntil ?: existing.licenseValidUntil,
