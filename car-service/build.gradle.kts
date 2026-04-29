@@ -1,3 +1,4 @@
+val swagger_ui_version: String by project
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -39,6 +40,7 @@ dependencies {
     implementation(libs.grpc.netty.shaded)
     implementation(libs.grpc.protobuf)
     implementation(libs.protobuf.kotlin)
+    implementation("io.github.smiley4:ktor-swagger-ui:${swagger_ui_version}")
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
