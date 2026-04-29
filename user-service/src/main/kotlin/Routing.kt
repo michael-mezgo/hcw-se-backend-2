@@ -1,5 +1,6 @@
 package at.ac.hcw
 
+import at.ac.hcw.routes.adminRoutes
 import at.ac.hcw.routes.userRoutes
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.basicPublish
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.rabbitmq
@@ -12,7 +13,6 @@ fun Application.configureRouting() {
     val userService = attributes[UserServiceKey]
     val authService = attributes[AuthServiceKey]
     routing {
-        //TODO: Fatima - init admin routes
         userRoutes(
 
             userService = userService,
@@ -29,6 +29,22 @@ fun Application.configureRouting() {
                     }
                 }
             },
+
+            onUserDeleted = { event ->
+                app.rabbitmq {
+                    basicPublish {
+                        exchange = "user-events"
+                        routingKey = "user.deleted"
+                        message {
+                            Json.encodeToString(event)
+                        }
+                    }
+                }
+            }
+        )
+
+        adminRoutes(
+            userService = userService,
 
             onUserDeleted = { event ->
                 app.rabbitmq {
