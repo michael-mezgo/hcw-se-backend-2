@@ -18,7 +18,6 @@ fun Route.userRoutes(
     onUserCreated: suspend (UserEvent) -> Unit = {},
     onUserDeleted: suspend (UserEvent) -> Unit = {}
 ) {
-    //TODO: Document SMILEY4 endpoints (documentation)
 
     // ── AUTH ─────────────────────────────────────────────
     route("/auth") {
@@ -26,10 +25,23 @@ fun Route.userRoutes(
         post("/register", {
             tags("Auth")
             summary = "Register a new user"
-            request { body<UserRegistration>() }
+            description = "Creates a new user account."
+
+            request {
+                body<UserRegistration> {
+                    description = "User registration data"
+                    required = true
+                }
+            }
+
             response {
-                HttpStatusCode.Created to { body<Map<String, String>>() }
-                HttpStatusCode.Conflict to {}
+                HttpStatusCode.Created to {
+                    description = "User successfully created"
+                    body<Map<String, String>>()
+                }
+                HttpStatusCode.Conflict to {
+                    description = "Username or email already exists"
+                }
             }
         }) {
             try {
@@ -46,7 +58,25 @@ fun Route.userRoutes(
 
         post("/login", {
             tags("Auth")
-            //TODO: Documentation
+            summary = "Login user"
+            description = "Authenticates user and returns JWT token."
+
+            request {
+                body<UserLoginRequest> {
+                    description = "User login credentials"
+                    required = true
+                }
+            }
+
+            response {
+                HttpStatusCode.OK to {
+                    description = "Login successful"
+                    body<LoginResponse>()
+                }
+                HttpStatusCode.Unauthorized to {
+                    description = "Invalid credentials"
+                }
+            }
         }) {
             val credentials = call.receive<UserLoginRequest>()
             val response = authService.login(credentials)
@@ -62,7 +92,21 @@ fun Route.userRoutes(
             // GET PROFILE
             get({
                 tags("Users")
-                //TODO: Documentation
+                summary = "Get own profile"
+                description = "Returns the authenticated user's profile."
+
+                response {
+                    HttpStatusCode.OK to {
+                        description = "User profile"
+                        body<UserResponse>()
+                    }
+                    HttpStatusCode.NotFound to {
+                        description = "User not found"
+                    }
+                    HttpStatusCode.Unauthorized to {
+                        description = "Not authenticated"
+                    }
+                }
             }) {
                 val principal = call.principal<JwtPrincipal>()!!
                 val user = userService.findById(principal.userId)
@@ -74,7 +118,28 @@ fun Route.userRoutes(
             // UPDATE PROFILE
             patch({
                 tags("Users")
-                //TODO: Documentation
+                summary = "Update own profile"
+                description = "Updates user profile fields."
+
+                request {
+                    body<UserUpdate> {
+                        description = "Fields to update"
+                        required = true
+                    }
+                }
+
+                response {
+                    HttpStatusCode.OK to {
+                        description = "User updated successfully"
+                        body<UserResponse>()
+                    }
+                    HttpStatusCode.NotFound to {
+                        description = "User not found"
+                    }
+                    HttpStatusCode.Unauthorized to {
+                        description = "Not authenticated"
+                    }
+                }
             }) {
                 val principal = call.principal<JwtPrincipal>()!!
                 val update = call.receive<UserUpdate>()
@@ -88,7 +153,20 @@ fun Route.userRoutes(
             // DELETE (Soft oder Hard)
             delete({
                 tags("Users")
-                //TODO: Documentation
+                summary = "Delete own account"
+                description = "Deletes the authenticated user's account."
+
+                response {
+                    HttpStatusCode.NoContent to {
+                        description = "User deleted successfully"
+                    }
+                    HttpStatusCode.NotFound to {
+                        description = "User not found"
+                    }
+                    HttpStatusCode.Unauthorized to {
+                        description = "Not authenticated"
+                    }
+                }
             }) {
                 val principal = call.principal<JwtPrincipal>()!!
 
@@ -109,8 +187,18 @@ fun Route.userRoutes(
 
             get({
                 tags("Users")
-                description = "Get all users (admin only)"
-                //TODO: Documentation
+                summary = "Get all users"
+                description = "Returns all users (admin only)."
+
+                response {
+                    HttpStatusCode.OK to {
+                        description = "List of users"
+                        body<List<UserResponse>>()
+                    }
+                    HttpStatusCode.Forbidden to {
+                        description = "Admin privileges required"
+                    }
+                }
             }) {
                 val users = userService.findAll()
                 call.respond(HttpStatusCode.OK, users.map { it.toResponse() })
@@ -118,8 +206,31 @@ fun Route.userRoutes(
 
             delete("/{id}", {
                 tags("Users")
-                description = "Delete any user (admin only)"
-                //TODO: Documentation
+                summary = "Delete user by ID"
+                description = "Deletes a user by ID (admin only)."
+
+                request {
+                    pathParameter<String>("id") {
+                        description = "User ID"
+                        required = true
+                    }
+                }
+
+                response {
+                    HttpStatusCode.OK to {
+                        description = "User deleted successfully"
+                        body<UserResponse>()
+                    }
+                    HttpStatusCode.NotFound to {
+                        description = "User not found"
+                    }
+                    HttpStatusCode.BadRequest to {
+                        description = "Missing or invalid ID"
+                    }
+                    HttpStatusCode.Forbidden to {
+                        description = "Admin privileges required"
+                    }
+                }
             }) {
                 val id = call.parameters["id"]
                     ?: return@delete call.respond(HttpStatusCode.BadRequest, "Missing id")
