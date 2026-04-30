@@ -10,6 +10,7 @@ import kotlinx.serialization.json.Json
 fun Application.configureRouting() {
     val app = this
     val carService = attributes[CarServiceKey]
+    val currencyClient = attributes[CurrencyClientKey]
     routing {
         route("/api") {
             carRoutes(
@@ -31,7 +32,8 @@ fun Application.configureRouting() {
                         }
                     }
                 },
-                carService = carService
+                carService = carService,
+                currencyClient = currencyClient
             )
         }
     }
