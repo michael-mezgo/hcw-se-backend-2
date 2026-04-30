@@ -5,10 +5,12 @@ import at.ac.hcw.dto.*
 import at.ac.hcw.exceptions.CarAlreadyBookedException
 import at.ac.hcw.exceptions.CarNotFoundException
 import at.ac.hcw.exceptions.UserNotFoundException
+import com.mongodb.MongoSocketOpenException
 import at.ac.hcw.model.toCancelledEvent
 import at.ac.hcw.model.toCreatedEvent
 import at.ac.hcw.model.toResponse
 import at.ac.hcw.service.BookingService
+import com.mongodb.MongoException
 import io.github.smiley4.ktorswaggerui.dsl.routing.delete
 import io.github.smiley4.ktorswaggerui.dsl.routing.get
 import io.github.smiley4.ktorswaggerui.dsl.routing.post
@@ -41,6 +43,8 @@ fun Route.bookingRoutes(
                     }
                     HttpStatusCode.NotFound to { description = "User or car not found" }
                     HttpStatusCode.Conflict to { description = "Car is already booked" }
+                    HttpStatusCode.Forbidden to { description = "User not allowed to book" }
+                    HttpStatusCode.ServiceUnavailable to { description = "Service unavailable" }
                 }
             }) {
                 try {
@@ -59,6 +63,8 @@ fun Route.bookingRoutes(
                     call.respond(HttpStatusCode.NotFound, e.message ?: "Car not found")
                 } catch (e: CarAlreadyBookedException) {
                     call.respond(HttpStatusCode.Conflict, e.message ?: "Car is already booked")
+                } catch (e: MongoException) {
+                    call.respond(HttpStatusCode.ServiceUnavailable, "Database error")
                 }
             }
         }
@@ -81,22 +87,27 @@ fun Route.bookingRoutes(
                     HttpStatusCode.NotFound to { description = "Booking not found" }
                     HttpStatusCode.BadRequest to { description = "Missing or invalid id" }
                     HttpStatusCode.Forbidden to { description = "Not allowed to cancel another user's booking" }
+                    HttpStatusCode.ServiceUnavailable to { description = "Service unavailable" }
                 }
             }) {
-                val id = call.parameters["id"]
-                    ?: return@delete call.respond(HttpStatusCode.BadRequest, "Missing id")
+                try {
+                    val id = call.parameters["id"]
+                        ?: return@delete call.respond(HttpStatusCode.BadRequest, "Missing id")
 
-                val principal = call.principal<JwtPrincipal>()!!
-                val booking = bookingService.findById(id)
-                    ?: return@delete call.respond(HttpStatusCode.NotFound, "Booking not found")
+                    val principal = call.principal<JwtPrincipal>()!!
+                    val booking = bookingService.findById(id)
+                        ?: return@delete call.respond(HttpStatusCode.NotFound, "Booking not found")
 
-                if (!principal.isAdmin && booking.userId != principal.userId) {
-                    return@delete call.respond(HttpStatusCode.Forbidden, "Not allowed to cancel another user's booking")
+                    if (!principal.isAdmin && booking.userId != principal.userId) {
+                        return@delete call.respond(HttpStatusCode.Forbidden, "Not allowed to cancel another user's booking")
+                    }
+
+                    val cancelled = bookingService.cancel(id)!!
+                    onBookingCancelled(cancelled.toCancelledEvent())
+                    call.respond(HttpStatusCode.OK, cancelled.toResponse())
+                } catch (e: MongoException) {
+                    call.respond(HttpStatusCode.ServiceUnavailable, "Database error")
                 }
-
-                val cancelled = bookingService.cancel(id)!!
-                onBookingCancelled(cancelled.toCancelledEvent())
-                call.respond(HttpStatusCode.OK, cancelled.toResponse())
             }
         }
 
@@ -117,18 +128,23 @@ fun Route.bookingRoutes(
                     }
                     HttpStatusCode.BadRequest to { description = "Missing userId query parameter" }
                     HttpStatusCode.Forbidden to { description = "Not allowed to view bookings of another user" }
+                    HttpStatusCode.ServiceUnavailable to { description = "Service unavailable" }
                 }
             }) {
-                val userId = call.request.queryParameters["userId"]
-                    ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing userId query parameter")
+                try {
+                    val userId = call.request.queryParameters["userId"]
+                        ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing userId query parameter")
 
-                val principal = call.principal<JwtPrincipal>()!!
+                    val principal = call.principal<JwtPrincipal>()!!
 
-                if (!principal.isAdmin && principal.userId != userId) {
-                    return@get call.respond(HttpStatusCode.Forbidden, "Not allowed to view bookings of another user")
+                    if (!principal.isAdmin && principal.userId != userId) {
+                        return@get call.respond(HttpStatusCode.Forbidden, "Not allowed to view bookings of another user")
+                    }
+
+                    call.respond(HttpStatusCode.OK, bookingService.findByUser(userId).map { it.toResponse() })
+                } catch (e: MongoException) {
+                    call.respond(HttpStatusCode.ServiceUnavailable, "Database error")
                 }
-
-                call.respond(HttpStatusCode.OK, bookingService.findByUser(userId).map { it.toResponse() })
             }
         }
     }
