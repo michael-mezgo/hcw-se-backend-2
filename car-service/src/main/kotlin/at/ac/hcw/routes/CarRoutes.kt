@@ -37,6 +37,9 @@ fun Routing.carRoutes(
                 HttpStatusCode.BadRequest to {
                     description = "Invalid or unsupported currency"
                 }
+                HttpStatusCode.InternalServerError to {
+                    description = "Unknown Error!"
+                }
             }
         }) {
             val currency = call.request.queryParameters["currency"] ?: "USD"
@@ -48,6 +51,9 @@ fun Routing.carRoutes(
                 call.respond(HttpStatusCode.OK, cars)
             } catch (e: BadRequestException) {
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "")
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
+                println(e.message)
             }
         }
 
@@ -76,6 +82,9 @@ fun Routing.carRoutes(
                 HttpStatusCode.NotFound to {
                     description = "Car not found"
                 }
+                HttpStatusCode.InternalServerError to {
+                    description = "Unknown Error!"
+                }
             }
         }) {
             val id = call.parameters["id"]
@@ -98,6 +107,9 @@ fun Routing.carRoutes(
                 call.respond(HttpStatusCode.OK, response)
             } catch (e: BadRequestException) {
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "Invalid request")
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
+                println(e.message)
             }
         }
 
@@ -123,6 +135,9 @@ fun Routing.carRoutes(
                     }
                     HttpStatusCode.Forbidden to {
                         description = "JSON Web Token with admin privileges required"
+                    }
+                    HttpStatusCode.InternalServerError to {
+                        description = "Unknown Error!"
                     }
                 }
             }) {
@@ -166,6 +181,9 @@ fun Routing.carRoutes(
                     HttpStatusCode.Forbidden to {
                         description = "JSON Web Token with admin privileges required"
                     }
+                    HttpStatusCode.InternalServerError to {
+                        description = "Unknown Error!"
+                    }
                 }
             }) {
                 val id = call.parameters["id"]
@@ -188,6 +206,9 @@ fun Routing.carRoutes(
                     call.respond(HttpStatusCode.OK, response)
                 } catch (e: BadRequestException) {
                     call.respond(HttpStatusCode.BadRequest, e.message ?: "Invalid request")
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
+                    println(e.message)
                 }
             }
         }
@@ -216,6 +237,9 @@ fun Routing.carRoutes(
                     }
                     HttpStatusCode.Forbidden to {
                         description = "JSON Web Token with admin privileges required"
+                    }
+                    HttpStatusCode.InternalServerError to {
+                        description = "Unknown Error!"
                     }
                 }
             }) {
