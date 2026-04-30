@@ -1,6 +1,6 @@
 ktor:
   deployment:
-    port: 8080
+    port: $PORT
   application:
     modules:
       - at.ac.hcw.HttpKt.configureHttp
@@ -8,15 +8,23 @@ ktor:
       - at.ac.hcw.SecurityKt.configureSecurity
       - at.ac.hcw.MongoKt.configureMongo
       - at.ac.hcw.RabbitmqKt.configureRabbitmq
+      - at.ac.hcw.GrpcKt.configureGrpc
       - at.ac.hcw.ResourcesKt.configureResources
       - at.ac.hcw.RoutingKt.configureRouting
+      - at.ac.hcw.OpenApiKt.configureOpenApi
 
 db:
   mongo:
-    host: localhost
-    port: 27018
+    host: $MONGO_HOST
+    port: $MONGO_PORT
     database:
-        name: car-service
+        name: $MONGO_DB
+
+grpc:
+  currency:
+    host: $GRPC_HOST
+    port: $GRPC_PORT
+    apiKey: $GRPC_API_KEY
 
 rabbitmq:
-  uri: amqp://guest:guest@localhost:5672
+  uri: $RABBITMQ_URI
