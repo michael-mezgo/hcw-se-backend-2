@@ -1,6 +1,6 @@
 ktor:
   deployment:
-    port: ${PORT}
+    port: $PORT
   application:
     modules:
       - at.ac.hcw.HttpKt.configureHttp
@@ -26,4 +26,4 @@ grpc:
     port: 5125
 
 rabbitmq:
-  uri: amqp://guest:guest@localhost:5672
+  uri: $RABBITMQ_URI
