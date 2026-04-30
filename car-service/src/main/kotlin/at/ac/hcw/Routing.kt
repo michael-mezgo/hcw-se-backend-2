@@ -11,26 +11,28 @@ fun Application.configureRouting() {
     val app = this
     val carService = attributes[CarServiceKey]
     routing {
-        carRoutes(
-            onCarCreated = { carEvent ->
-                app.rabbitmq {
-                    basicPublish {
-                        exchange = "car-events"
-                        routingKey = "car.created"
-                        message { Json.encodeToString(carEvent)}
+        route("/api") {
+            carRoutes(
+                onCarCreated = { carEvent ->
+                    app.rabbitmq {
+                        basicPublish {
+                            exchange = "car-events"
+                            routingKey = "car.created"
+                            message { Json.encodeToString(carEvent)}
+                        }
                     }
-                }
-            },
-            onCarDeleted = { carEvent ->
-                app.rabbitmq {
-                    basicPublish {
-                        exchange = "car-events"
-                        routingKey = "car.deleted"
-                        message { Json.encodeToString(carEvent) }
+                },
+                onCarDeleted = { carEvent ->
+                    app.rabbitmq {
+                        basicPublish {
+                            exchange = "car-events"
+                            routingKey = "car.deleted"
+                            message { Json.encodeToString(carEvent) }
+                        }
                     }
-                }
-            },
-            carService = carService
-        )
+                },
+                carService = carService
+            )
+        }
     }
 }
