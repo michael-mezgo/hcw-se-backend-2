@@ -12,64 +12,68 @@ fun Application.configureRouting() {
     val app = this
     val userService = attributes[UserServiceKey]
     val authService = attributes[AuthServiceKey]
+
     routing {
-        userRoutes(
 
-            userService = userService,
-            authService = authService,
+        route("/api"){
+            userRoutes(
 
-            onUserCreated = { event ->
-                app.rabbitmq {
-                    basicPublish {
-                        exchange = "user-events"
-                        routingKey = "user.created"
-                        message {
-                            Json.encodeToString(event)
+                userService = userService,
+                authService = authService,
+
+                onUserCreated = { event ->
+                    app.rabbitmq {
+                        basicPublish {
+                            exchange = "user-events"
+                            routingKey = "user.created"
+                            message {
+                                Json.encodeToString(event)
+                            }
+                        }
+                    }
+                },
+
+                onUserDeleted = { event ->
+                    app.rabbitmq {
+                        basicPublish {
+                            exchange = "user-events"
+                            routingKey = "user.deleted"
+                            message {
+                                Json.encodeToString(event)
+                            }
                         }
                     }
                 }
-            },
+            )
 
-            onUserDeleted = { event ->
-                app.rabbitmq {
-                    basicPublish {
-                        exchange = "user-events"
-                        routingKey = "user.deleted"
-                        message {
-                            Json.encodeToString(event)
+            adminRoutes(
+
+                userService = userService,
+
+                onUserCreated = { event ->
+                    app.rabbitmq {
+                        basicPublish {
+                            exchange = "user-events"
+                            routingKey = "user.created"
+                            message {
+                                Json.encodeToString(event)
+                            }
+                        }
+                    }
+                },
+
+                onUserDeleted = { event ->
+                    app.rabbitmq {
+                        basicPublish {
+                            exchange = "user-events"
+                            routingKey = "user.deleted"
+                            message {
+                                Json.encodeToString(event)
+                            }
                         }
                     }
                 }
-            }
-        )
-
-        adminRoutes(
-
-            userService = userService,
-
-            onUserCreated = { event ->
-                app.rabbitmq {
-                    basicPublish {
-                        exchange = "user-events"
-                        routingKey = "user.created"
-                        message {
-                            Json.encodeToString(event)
-                        }
-                    }
-                }
-            },
-
-            onUserDeleted = { event ->
-                app.rabbitmq {
-                    basicPublish {
-                        exchange = "user-events"
-                        routingKey = "user.deleted"
-                        message {
-                            Json.encodeToString(event)
-                        }
-                    }
-                }
-            }
-        )
+            )
+        }
     }
 }

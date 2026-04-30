@@ -7,7 +7,6 @@ import at.ac.hcw.exceptions.UserExistsException
 import at.ac.hcw.service.AuthService
 import at.ac.hcw.service.UserService
 import com.mongodb.MongoException
-import com.mongodb.MongoSocketOpenException
 import io.github.smiley4.ktorswaggerui.dsl.routing.*
 import io.ktor.http.*
 import io.ktor.server.auth.*
