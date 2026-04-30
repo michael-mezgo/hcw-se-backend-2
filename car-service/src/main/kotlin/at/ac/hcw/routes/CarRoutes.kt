@@ -1,8 +1,8 @@
 package at.ac.hcw.routes
 
+import at.ac.hcw.CurrencyClient
 import at.ac.hcw.dto.*
 import at.ac.hcw.service.CarService
-import currency.CurrencyServiceGrpcKt
 import io.github.smiley4.ktorswaggerui.dsl.routing.*
 import io.ktor.http.*
 import io.ktor.server.auth.authenticate
@@ -10,10 +10,11 @@ import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import javax.naming.ServiceUnavailableException
 
-fun Routing.carRoutes(
+fun Route.carRoutes(
     carService: CarService,
-    currencyClient: CurrencyServiceGrpcKt.CurrencyServiceCoroutineStub? = null,
+    currencyClient: CurrencyClient? = null,
     onCarCreated: suspend (CarEvent) -> Unit = {},
     onCarDeleted: suspend (CarEvent) -> Unit = {},
 ) {
@@ -40,6 +41,7 @@ fun Routing.carRoutes(
                 HttpStatusCode.InternalServerError to {
                     description = "Unknown Error!"
                 }
+                HttpStatusCode.ServiceUnavailable to {description = "Service unavailable"}
             }
         }) {
             val currency = call.request.queryParameters["currency"] ?: "USD"
@@ -51,6 +53,8 @@ fun Routing.carRoutes(
                 call.respond(HttpStatusCode.OK, cars)
             } catch (e: BadRequestException) {
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "")
+            } catch (e: ServiceUnavailableException) {
+                call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Currency service unavailable")
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
                 println(e.message)
@@ -82,6 +86,7 @@ fun Routing.carRoutes(
                 HttpStatusCode.NotFound to {
                     description = "Car not found"
                 }
+                HttpStatusCode.ServiceUnavailable to {description = "Service unavailable"}
                 HttpStatusCode.InternalServerError to {
                     description = "Unknown Error!"
                 }
@@ -107,6 +112,8 @@ fun Routing.carRoutes(
                 call.respond(HttpStatusCode.OK, response)
             } catch (e: BadRequestException) {
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "Invalid request")
+            } catch (e: ServiceUnavailableException) {
+                call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Currency service unavailable")
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
                 println(e.message)

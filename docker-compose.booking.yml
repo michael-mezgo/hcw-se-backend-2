@@ -45,7 +45,7 @@ services:
       dockerfile: booking-service/Dockerfile
     container_name: booking-service
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       PORT: 8080
       MONGO_HOST: mongo-booking
@@ -73,6 +73,7 @@ services:
       MONGO_DB: car-service
       RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
       JWT_SECRET: changeme
+      GRPC_API_KEY: secret123
     depends_on:
       rabbitmq:
         condition: service_healthy

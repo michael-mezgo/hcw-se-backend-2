@@ -1,11 +1,15 @@
 package at.ac.hcw.dto
 
+import at.ac.hcw.CurrencyClient
 import at.ac.hcw.domain.Car
 import com.google.protobuf.Empty
 import currency.Currency
 import currency.CurrencyServiceGrpcKt
+import io.grpc.Status
+import io.grpc.StatusException
 import io.ktor.server.plugins.BadRequestException
 import kotlinx.serialization.Serializable
+import javax.naming.ServiceUnavailableException
 
 @Serializable
 data class CarEvent(val carId: String)
@@ -66,34 +70,42 @@ fun CarCreateRequest.toDomain(): Car =
         available = true
     )
 
-suspend fun CurrencyServiceGrpcKt.CurrencyServiceCoroutineStub.getSupportedCurrenciesList(): List<String> =
+private suspend fun CurrencyServiceGrpcKt.CurrencyServiceCoroutineStub.getSupportedCurrenciesList(): List<String> =
     getSupportedCurrencies(Empty.getDefaultInstance()).currenciesList
 
 suspend fun Car.toResponse(
-    currencyService: CurrencyServiceGrpcKt.CurrencyServiceCoroutineStub? = null,
+    currencyService: CurrencyClient? = null,
     toCurrency: String = "USD"
 ): CarResponse {
-    val currencies = currencyService?.getSupportedCurrenciesList()
-    if (currencies?.contains(toCurrency) ?: false) {
-        println("Currency $toCurrency is supported, converting price.")
-    } else {
-        println("Currency $toCurrency is not supported")
-        throw BadRequestException("Currency $toCurrency is not supported.")
+    val price: CurrencyDto
+    if (toCurrency.uppercase() == "USD")
+        price = CurrencyDto(amount = pricePerDay, currencyCode = "USD")
+    else {
+        if (currencyService == null)
+            throw ServiceUnavailableException("Currency conversion not available.")
+
+        val currencyName = toCurrency.uppercase().trim()
+        if (!currencyService.stub.getSupportedCurrenciesList().contains(currencyName))
+            throw BadRequestException("Currency $currencyName is not supported.")
+
+        val request: Currency.ConvertRequest = Currency.ConvertRequest.newBuilder()
+            .setAmount(pricePerDay)
+            .setFromCurrency("USD")
+            .setToCurrency(currencyName)
+            .setApiKey(currencyService.apiKey)
+            .build()
+
+        try {
+            val response = currencyService.stub.convert(request)
+            price = CurrencyDto(amount = response.result, currencyCode = currencyName)
+        } catch (e: StatusException) {
+            if (e.status.code == Status.Code.UNAUTHENTICATED)
+                throw ServiceUnavailableException("Currency service authentication failed: invalid API key.")
+            throw e
+        }
     }
-    val price = if (toCurrency != "USD") {
-        CurrencyDto(
-            amount = currencyService.convert(
-                Currency.ConvertRequest.newBuilder()
-                    .setFromCurrency("USD")
-                    .setToCurrency(toCurrency)
-                    .setAmount(pricePerDay)
-                    .build()
-            ).result,
-            currencyCode = toCurrency
-        )
-    } else {
-        CurrencyDto(amount = pricePerDay, currencyCode = "USD")
-    }
+
+
     return CarResponse(
         id = id ?: "",
         manufacturer = manufacturer,
