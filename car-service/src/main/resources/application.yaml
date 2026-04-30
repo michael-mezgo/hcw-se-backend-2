@@ -1,6 +1,6 @@
 ktor:
   deployment:
-    port: 8080
+    port: ${PORT}
   application:
     modules:
       - at.ac.hcw.HttpKt.configureHttp
@@ -15,10 +15,10 @@ ktor:
 
 db:
   mongo:
-    host: localhost
-    port: 27018
+    host: $MONGO_HOST
+    port: $MONGO_PORT
     database:
-        name: car-service
+        name: $MONGO_DB
 
 grpc:
   currency:
