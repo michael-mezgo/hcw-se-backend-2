@@ -12,26 +12,28 @@ fun Application.configureRouting() {
     val app = this
 
     routing {
-        bookingRoutes(
-            bookingService = bookingService,
-            onBookingCreated = { event ->
-                app.rabbitmq {
-                    basicPublish {
-                        exchange = "booking-events"
-                        routingKey = "booking.created"
-                        message { Json.encodeToString(event) }
+        route("/api") {
+            bookingRoutes(
+                bookingService = bookingService,
+                onBookingCreated = { event ->
+                    app.rabbitmq {
+                        basicPublish {
+                            exchange = "booking-events"
+                            routingKey = "booking.created"
+                            message { Json.encodeToString(event) }
+                        }
+                    }
+                },
+                onBookingCancelled = { event ->
+                    app.rabbitmq {
+                        basicPublish {
+                            exchange = "booking-events"
+                            routingKey = "booking.cancelled"
+                            message { Json.encodeToString(event) }
+                        }
                     }
                 }
-            },
-            onBookingCancelled = { event ->
-                app.rabbitmq {
-                    basicPublish {
-                        exchange = "booking-events"
-                        routingKey = "booking.cancelled"
-                        message { Json.encodeToString(event) }
-                    }
-                }
-            }
-        )
+            )
+        }
     }
 }
