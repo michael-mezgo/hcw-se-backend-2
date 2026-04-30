@@ -3,8 +3,11 @@ package at.ac.hcw.routes
 import at.ac.hcw.database.toEvent
 import at.ac.hcw.database.toResponse
 import at.ac.hcw.dto.*
+import at.ac.hcw.exceptions.UserExistsException
 import at.ac.hcw.service.AuthService
 import at.ac.hcw.service.UserService
+import com.mongodb.MongoException
+import com.mongodb.MongoSocketOpenException
 import io.github.smiley4.ktorswaggerui.dsl.routing.*
 import io.ktor.http.*
 import io.ktor.server.auth.*
@@ -42,6 +45,12 @@ fun Route.userRoutes(
                 HttpStatusCode.Conflict to {
                     description = "Username or email already exists"
                 }
+                HttpStatusCode.ServiceUnavailable to {
+                    description = "Service unavailable"
+                }
+                HttpStatusCode.InternalServerError to {
+                    description = "Unknown Error!"
+                }
             }
         }) {
             try {
@@ -51,8 +60,13 @@ fun Route.userRoutes(
                 onUserCreated(user.toEvent())
 
                 call.respond(HttpStatusCode.Created, mapOf("id" to user.id))
+            } catch (e: UserExistsException) {
+                call.respond(HttpStatusCode.Conflict, e.message ?: "User already exists!")
+            } catch (e: MongoException) {
+                call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Database Error!")
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.Conflict, e.message ?: "User already exists")
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
+                println(e.message)
             }
         }
 
@@ -76,11 +90,24 @@ fun Route.userRoutes(
                 HttpStatusCode.Unauthorized to {
                     description = "Invalid credentials"
                 }
+                HttpStatusCode.ServiceUnavailable to {
+                    description = "Service unavailable"
+                }
+                HttpStatusCode.InternalServerError to {
+                    description = "Unknown Error!"
+                }
             }
         }) {
-            val credentials = call.receive<UserLoginRequest>()
-            val response = authService.login(credentials)
-            call.respond(HttpStatusCode.OK, response)
+            try {
+                val credentials = call.receive<UserLoginRequest>()
+                val response = authService.login(credentials)
+                call.respond(HttpStatusCode.OK, response)
+            } catch (e: MongoException) {
+                call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Database Error!")
+            }catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
+                println(e.message)
+            }
         }
     }
 
@@ -89,7 +116,6 @@ fun Route.userRoutes(
 
         route("/users/me") {
 
-            // GET PROFILE
             get({
                 tags("Users")
                 summary = "Get own profile"
@@ -106,16 +132,28 @@ fun Route.userRoutes(
                     HttpStatusCode.Unauthorized to {
                         description = "Not authenticated"
                     }
+                    HttpStatusCode.ServiceUnavailable to {
+                        description = "Service unavailable"
+                    }
+                    HttpStatusCode.InternalServerError to {
+                        description = "Unknown Error!"
+                    }
                 }
             }) {
-                val principal = call.principal<JwtPrincipal>()!!
-                val user = userService.findById(principal.userId)
-                    ?: return@get call.respond(HttpStatusCode.NotFound)
+                try {
+                    val principal = call.principal<JwtPrincipal>()!!
+                    val user = userService.findById(principal.userId)
+                        ?: return@get call.respond(HttpStatusCode.NotFound)
 
-                call.respond(HttpStatusCode.OK, user.toResponse())
+                    call.respond(HttpStatusCode.OK, user.toResponse())
+                } catch (e: MongoException) {
+                    call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Database Error!")
+                }catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
+                    println(e.message)
+                }
             }
 
-            // UPDATE PROFILE
             patch({
                 tags("Users")
                 summary = "Update own profile"
@@ -139,18 +177,30 @@ fun Route.userRoutes(
                     HttpStatusCode.Unauthorized to {
                         description = "Not authenticated"
                     }
+                    HttpStatusCode.ServiceUnavailable to {
+                        description = "Service unavailable"
+                    }
+                    HttpStatusCode.InternalServerError to {
+                        description = "Unknown Error!"
+                    }
                 }
             }) {
-                val principal = call.principal<JwtPrincipal>()!!
-                val update = call.receive<UserUpdate>()
+                try {
+                    val principal = call.principal<JwtPrincipal>()!!
+                    val update = call.receive<UserUpdate>()
 
-                val updated = userService.update(principal.userId, update)
-                    ?: return@patch call.respond(HttpStatusCode.NotFound)
+                    val updated = userService.update(principal.userId, update)
+                        ?: return@patch call.respond(HttpStatusCode.NotFound)
 
-                call.respond(HttpStatusCode.OK, updated.toResponse())
+                    call.respond(HttpStatusCode.OK, updated.toResponse())
+                } catch (e: MongoException) {
+                    call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Database Error!")
+                }catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
+                    println(e.message)
+                }
             }
 
-            // DELETE (Soft oder Hard)
             delete({
                 tags("Users")
                 summary = "Delete own account"
@@ -166,16 +216,29 @@ fun Route.userRoutes(
                     HttpStatusCode.Unauthorized to {
                         description = "Not authenticated"
                     }
+                    HttpStatusCode.ServiceUnavailable to {
+                        description = "Service unavailable"
+                    }
+                    HttpStatusCode.InternalServerError to {
+                        description = "Unknown Error!"
+                    }
                 }
             }) {
-                val principal = call.principal<JwtPrincipal>()!!
+                try {
+                    val principal = call.principal<JwtPrincipal>()!!
 
-                val deleted = userService.delete(principal.userId)
-                    ?: return@delete call.respond(HttpStatusCode.NotFound)
+                    val deleted = userService.delete(principal.userId)
+                        ?: return@delete call.respond(HttpStatusCode.NotFound)
 
-                onUserDeleted(deleted.toEvent())
+                    onUserDeleted(deleted.toEvent())
 
-                call.respond(HttpStatusCode.NoContent)
+                    call.respond(HttpStatusCode.NoContent)
+                } catch (e: MongoException) {
+                    call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Database Error!")
+                }catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
+                    println(e.message)
+                }
             }
         }
     }
@@ -198,10 +261,23 @@ fun Route.userRoutes(
                     HttpStatusCode.Forbidden to {
                         description = "Admin privileges required"
                     }
+                    HttpStatusCode.ServiceUnavailable to {
+                        description = "Service unavailable"
+                    }
+                    HttpStatusCode.InternalServerError to {
+                        description = "Unknown Error!"
+                    }
                 }
             }) {
-                val users = userService.findAll()
-                call.respond(HttpStatusCode.OK, users.map { it.toResponse() })
+                try {
+                    val users = userService.findAll()
+                    call.respond(HttpStatusCode.OK, users.map { it.toResponse() })
+                } catch (e: MongoException) {
+                    call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Database Error!")
+                }catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
+                    println(e.message)
+                }
             }
 
             delete("/{id}", {
@@ -230,17 +306,30 @@ fun Route.userRoutes(
                     HttpStatusCode.Forbidden to {
                         description = "Admin privileges required"
                     }
+                    HttpStatusCode.ServiceUnavailable to {
+                        description = "Service unavailable"
+                    }
+                    HttpStatusCode.InternalServerError to {
+                        description = "Unknown Error!"
+                    }
                 }
             }) {
-                val id = call.parameters["id"]
-                    ?: return@delete call.respond(HttpStatusCode.BadRequest, "Missing id")
+                try {
+                    val id = call.parameters["id"]
+                        ?: return@delete call.respond(HttpStatusCode.BadRequest, "Missing id")
 
-                val deleted = userService.delete(id)
-                    ?: return@delete call.respond(HttpStatusCode.NotFound)
+                    val deleted = userService.delete(id)
+                        ?: return@delete call.respond(HttpStatusCode.NotFound)
 
-                onUserDeleted(deleted.toEvent())
+                    onUserDeleted(deleted.toEvent())
 
-                call.respond(HttpStatusCode.OK, deleted.toResponse())
+                    call.respond(HttpStatusCode.OK, deleted.toResponse())
+                } catch (e: MongoException) {
+                    call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Database Error!")
+                }catch (e: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
+                    println(e.message)
+                }
             }
         }
     }

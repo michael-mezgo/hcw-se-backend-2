@@ -44,7 +44,20 @@ fun Application.configureRouting() {
         )
 
         adminRoutes(
+
             userService = userService,
+
+            onUserCreated = { event ->
+                app.rabbitmq {
+                    basicPublish {
+                        exchange = "user-events"
+                        routingKey = "user.created"
+                        message {
+                            Json.encodeToString(event)
+                        }
+                    }
+                }
+            },
 
             onUserDeleted = { event ->
                 app.rabbitmq {
