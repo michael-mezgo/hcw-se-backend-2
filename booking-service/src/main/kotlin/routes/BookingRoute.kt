@@ -5,7 +5,6 @@ import at.ac.hcw.dto.*
 import at.ac.hcw.exceptions.CarAlreadyBookedException
 import at.ac.hcw.exceptions.CarNotFoundException
 import at.ac.hcw.exceptions.UserNotFoundException
-import com.mongodb.MongoSocketOpenException
 import at.ac.hcw.model.toCancelledEvent
 import at.ac.hcw.model.toCreatedEvent
 import at.ac.hcw.model.toResponse
@@ -45,6 +44,7 @@ fun Route.bookingRoutes(
                     HttpStatusCode.Conflict to { description = "Car is already booked" }
                     HttpStatusCode.Forbidden to { description = "User not allowed to book" }
                     HttpStatusCode.ServiceUnavailable to { description = "Service unavailable" }
+                    HttpStatusCode.InternalServerError to { description = "Unknown service error" }
                 }
             }) {
                 try {
@@ -64,7 +64,11 @@ fun Route.bookingRoutes(
                 } catch (e: CarAlreadyBookedException) {
                     call.respond(HttpStatusCode.Conflict, e.message ?: "Car is already booked")
                 } catch (e: MongoException) {
+                    println("Mongo Error: ${e.message}")
                     call.respond(HttpStatusCode.ServiceUnavailable, "Database error")
+                } catch (e: Exception) {
+                    println("Error: ${e.message}")
+                    call.respond(HttpStatusCode.InternalServerError, "Unknown server error - contact the admin")
                 }
             }
         }
@@ -88,6 +92,7 @@ fun Route.bookingRoutes(
                     HttpStatusCode.BadRequest to { description = "Missing or invalid id" }
                     HttpStatusCode.Forbidden to { description = "Not allowed to cancel another user's booking" }
                     HttpStatusCode.ServiceUnavailable to { description = "Service unavailable" }
+                    HttpStatusCode.InternalServerError to { description = "Unknown service error" }
                 }
             }) {
                 try {
@@ -106,7 +111,11 @@ fun Route.bookingRoutes(
                     onBookingCancelled(cancelled.toCancelledEvent())
                     call.respond(HttpStatusCode.OK, cancelled.toResponse())
                 } catch (e: MongoException) {
+                    println("Error: ${e.message}")
                     call.respond(HttpStatusCode.ServiceUnavailable, "Database error")
+                } catch (e: Exception) {
+                    println("Error: ${e.message}")
+                    call.respond(HttpStatusCode.InternalServerError, "Unknown server error - contact the admin")
                 }
             }
         }
@@ -129,6 +138,7 @@ fun Route.bookingRoutes(
                     HttpStatusCode.BadRequest to { description = "Missing userId query parameter" }
                     HttpStatusCode.Forbidden to { description = "Not allowed to view bookings of another user" }
                     HttpStatusCode.ServiceUnavailable to { description = "Service unavailable" }
+                    HttpStatusCode.InternalServerError to { description = "Unknown service error" }
                 }
             }) {
                 try {
@@ -143,7 +153,11 @@ fun Route.bookingRoutes(
 
                     call.respond(HttpStatusCode.OK, bookingService.findByUser(userId).map { it.toResponse() })
                 } catch (e: MongoException) {
+                    println("Error: ${e.message}")
                     call.respond(HttpStatusCode.ServiceUnavailable, "Database error")
+                } catch (e: Exception) {
+                    println("Error: ${e.message}")
+                    call.respond(HttpStatusCode.InternalServerError, "Unknown server error - contact the admin")
                 }
             }
         }
