@@ -22,8 +22,9 @@ db:
 
 grpc:
   currency:
-    host: localhost
-    port: 5125
+    host: $GRPC_HOST
+    port: $GRPC_PORT
+    apiKey: $GRPC_API_KEY
 
 rabbitmq:
   uri: $RABBITMQ_URI
