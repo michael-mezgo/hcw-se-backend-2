@@ -56,8 +56,7 @@ class UserService(
             lastName = dto.lastName,
             licenseNumber = dto.licenseNumber,
             licenseValidUntil = dto.licenseValidUntil,
-            isAdmin = dto.isAdmin,
-            isLocked = false
+            isAdmin = dto.isAdmin
         )
 
         userRepository.save(user)
@@ -78,8 +77,7 @@ class UserService(
             lastName = dto.lastName ?: existing.lastName,
             licenseNumber = dto.licenseNumber ?: existing.licenseNumber,
             licenseValidUntil = dto.licenseValidUntil ?: existing.licenseValidUntil,
-            isAdmin = dto.isAdmin ?: existing.isAdmin,
-            isLocked = dto.isLocked ?: existing.isLocked
+            isAdmin = dto.isAdmin ?: existing.isAdmin
         )
 
         userRepository.update(id, updated)

@@ -58,7 +58,7 @@ fun Route.userRoutes(
 
                 onUserCreated(user.toEvent())
 
-                call.respond(HttpStatusCode.Created, mapOf("id" to user.id))
+                call.respond(HttpStatusCode.Created, mapOf("id" to user.id.toHexString()))
             } catch (e: UserExistsException) {
                 call.respond(HttpStatusCode.Conflict, e.message ?: "User already exists!")
             } catch (e: MongoException) {
@@ -242,94 +242,4 @@ fun Route.userRoutes(
         }
     }
 
-    // ── ADMIN OPTIONAL ───────────────────────────────────
-    authenticate("admin-jwt") {
-
-        route("/users") {
-
-            get({
-                tags("Users")
-                summary = "Get all users"
-                description = "Returns all users (admin only)."
-
-                response {
-                    HttpStatusCode.OK to {
-                        description = "List of users"
-                        body<List<UserResponse>>()
-                    }
-                    HttpStatusCode.Forbidden to {
-                        description = "Admin privileges required"
-                    }
-                    HttpStatusCode.ServiceUnavailable to {
-                        description = "Service unavailable"
-                    }
-                    HttpStatusCode.InternalServerError to {
-                        description = "Unknown Error!"
-                    }
-                }
-            }) {
-                try {
-                    val users = userService.findAll()
-                    call.respond(HttpStatusCode.OK, users.map { it.toResponse() })
-                } catch (e: MongoException) {
-                    call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Database Error!")
-                }catch (e: Exception) {
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
-                    println(e.message)
-                }
-            }
-
-            delete("/{id}", {
-                tags("Users")
-                summary = "Delete user by ID"
-                description = "Deletes a user by ID (admin only)."
-
-                request {
-                    pathParameter<String>("id") {
-                        description = "User ID"
-                        required = true
-                    }
-                }
-
-                response {
-                    HttpStatusCode.OK to {
-                        description = "User deleted successfully"
-                        body<UserResponse>()
-                    }
-                    HttpStatusCode.NotFound to {
-                        description = "User not found"
-                    }
-                    HttpStatusCode.BadRequest to {
-                        description = "Missing or invalid ID"
-                    }
-                    HttpStatusCode.Forbidden to {
-                        description = "Admin privileges required"
-                    }
-                    HttpStatusCode.ServiceUnavailable to {
-                        description = "Service unavailable"
-                    }
-                    HttpStatusCode.InternalServerError to {
-                        description = "Unknown Error!"
-                    }
-                }
-            }) {
-                try {
-                    val id = call.parameters["id"]
-                        ?: return@delete call.respond(HttpStatusCode.BadRequest, "Missing id")
-
-                    val deleted = userService.delete(id)
-                        ?: return@delete call.respond(HttpStatusCode.NotFound)
-
-                    onUserDeleted(deleted.toEvent())
-
-                    call.respond(HttpStatusCode.OK, deleted.toResponse())
-                } catch (e: MongoException) {
-                    call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Database Error!")
-                }catch (e: Exception) {
-                    call.respond(HttpStatusCode.InternalServerError, e.message ?: "Unknown Error! Contact Admin!")
-                    println(e.message)
-                }
-            }
-        }
-    }
 }

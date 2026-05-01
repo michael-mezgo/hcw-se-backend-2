@@ -13,6 +13,7 @@ class UserRepository(
     private val collection: MongoCollection<DatabaseUser> = database.getCollection("users", DatabaseUser::class.java)
 
     fun findById(id: String): DatabaseUser? {
+        if (!ObjectId.isValid(id)) return null
         return collection.find(eq("_id", ObjectId(id))).firstOrNull()
     }
 
@@ -24,11 +25,16 @@ class UserRepository(
         return collection.find(eq("username", username)).firstOrNull()
     }
 
+    fun findByEmail(email: String): DatabaseUser? {
+        return collection.find(eq("email", email)).firstOrNull()
+    }
+
     fun save(user: DatabaseUser) {
         collection.insertOne(user)
     }
 
     fun update(id: String, user: DatabaseUser) {
+        if (!ObjectId.isValid(id)) return
         collection.replaceOne(
             eq("_id", ObjectId(id)),
             user
@@ -36,6 +42,7 @@ class UserRepository(
     }
 
     fun deleteById(id: String) {
+        if (!ObjectId.isValid(id)) return
         collection.deleteOne(eq("_id", ObjectId(id)))
     }
 }

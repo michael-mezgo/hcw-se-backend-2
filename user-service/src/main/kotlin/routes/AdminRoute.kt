@@ -54,7 +54,7 @@ fun Route.adminRoutes(
 
                     onUserCreated(user.toEvent())
 
-                    call.respond(HttpStatusCode.Created, mapOf("id" to user.id))
+                    call.respond(HttpStatusCode.Created, mapOf("id" to user.id.toHexString()))
                 } catch (e: MongoException) {
                     call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Database Error!")
                 } catch (e: Exception) {

@@ -1,7 +1,6 @@
 package at.ac.hcw.dto
 
 import kotlinx.serialization.Serializable
-import org.bson.types.ObjectId
 
 /** Sent by the client when creating a new account. */
 @Serializable
@@ -47,7 +46,6 @@ data class UserResponse(
     val licenseNumber: String,
     val licenseValidUntil: String,
     val isAdmin: Boolean = false,
-    val isLocked: Boolean = false,
 )
 
 /** JWT claims of the authenticated user. */
@@ -77,5 +75,4 @@ data class AdminUserUpdate(
     val licenseNumber: String? = null,
     val licenseValidUntil: String? = null,
     val isAdmin: Boolean? = null,
-    val isLocked: Boolean? = null,
 )

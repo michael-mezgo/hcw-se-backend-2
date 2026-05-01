@@ -13,7 +13,11 @@ fun Application.configureRabbitmq() {
     val rabbitMQScope = CoroutineScope(SupervisorJob() + exceptionHandler)
 
     install(RabbitMQ) {
-        uri = environment.config.tryGetString("rabbitmq.uri") ?: "amqp://guest:guest@localhost:5672"
+        val configUri = environment.config.tryGetString("rabbitmq.uri")
+        if (configUri == null) {
+            log.warn("RABBITMQ_URI not configured, using default demo URI (amqp://guest:guest@localhost:5672)")
+        }
+        uri = configUri ?: "amqp://guest:guest@localhost:5672"
         defaultConnectionName = "default-connection"
         dispatcherThreadPollSize = 4
         tlsEnabled = false

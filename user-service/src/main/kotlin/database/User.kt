@@ -16,14 +16,13 @@ data class DatabaseUser(
     val lastName: String,
     val licenseNumber: String,
     val licenseValidUntil: String,
-    val isAdmin: Boolean = false,
-    val isLocked: Boolean = false
+    val isAdmin: Boolean = false
 )
 
-fun DatabaseUser.toEvent() = UserEvent(id.toString())
+fun DatabaseUser.toEvent() = UserEvent(id.toHexString())
 
 fun DatabaseUser.toResponse() = UserResponse(
-    id = id.toString(),
+    id = id.toHexString(),
     username = username,
     email = email,
     firstName = firstName,
@@ -31,5 +30,4 @@ fun DatabaseUser.toResponse() = UserResponse(
     licenseNumber = licenseNumber,
     licenseValidUntil = licenseValidUntil,
     isAdmin = isAdmin,
-    isLocked = isLocked,
 )

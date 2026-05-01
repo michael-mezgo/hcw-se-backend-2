@@ -17,9 +17,14 @@ class AuthService(
 
     fun register(dto: UserRegistration): DatabaseUser {
 
-        val exists = userRepository.findByUsername(dto.username)
-        if (exists != null) {
+        val existsByUsername = userRepository.findByUsername(dto.username)
+        if (existsByUsername != null) {
             throw UserExistsException(dto.username)
+        }
+
+        val existsByEmail = userRepository.findByEmail(dto.email)
+        if (existsByEmail != null) {
+            throw UserExistsException(dto.email)
         }
 
         val user = DatabaseUser(
@@ -41,7 +46,7 @@ class AuthService(
         val user = userRepository.findByUsername(dto.username)
             ?: throw UnauthorizedException(dto.username)
 
-        if (checkPassword(dto.password, user.passwordHash)) {
+        if (!checkPassword(dto.password, user.passwordHash)) {
             throw UnauthorizedException(dto.username)
         }
 
