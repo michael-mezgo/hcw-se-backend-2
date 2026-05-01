@@ -10,6 +10,6 @@ class Car (
     val imageName: String,
     val transmission: String,
     val power: Int,
-    val fuelType: String,
+    val fuelType: FuelType,
     val available: Boolean = false
 )

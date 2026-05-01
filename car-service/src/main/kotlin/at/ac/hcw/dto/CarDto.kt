@@ -3,6 +3,7 @@ package at.ac.hcw.dto
 import at.ac.hcw.CurrencyClient
 import at.ac.hcw.at.ac.hcw.service.BlobStorageService
 import at.ac.hcw.domain.Car
+import at.ac.hcw.domain.FuelType
 import com.google.protobuf.Empty
 import currency.Currency
 import currency.CurrencyServiceGrpcKt
@@ -24,7 +25,7 @@ data class CarCreateRequest(
     val description: String,
     val transmission: String,
     val power: Int,
-    val fuelType: String
+    val fuelType: FuelType
 )
 
 @Serializable
@@ -37,7 +38,7 @@ data class CarPatchRequest(
     val imageName: String? = null,
     val transmission: String? = null,
     val power: Int? = null,
-    val fuelType: String? = null
+    val fuelType: FuelType? = null
 ) {
 }
 
@@ -52,7 +53,7 @@ data class CarResponse(
     val imageName: String,
     val transmission: String,
     val power: Int,
-    val fuelType: String,
+    val fuelType: FuelType,
     val available: Boolean
 )
 

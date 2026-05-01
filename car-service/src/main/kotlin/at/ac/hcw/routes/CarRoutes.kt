@@ -138,8 +138,15 @@ fun Route.carRoutes(
                 description = "Creates a new car. This endpoint is intended for admins."
 
                 request {
-                    body<CarCreateRequest> {
-                        description = "Car data for the new car"
+                    multipartBody {
+                        description = "Multipart form data with car details and image"
+                        mediaTypes(ContentType.MultiPart.FormData)
+                        part<String>("data") {
+                            mediaTypes(ContentType.Application.Json)
+                        }
+                        part<ByteArray>("image") {
+                            mediaTypes(ContentType.Image.Any)
+                        }
                     }
                 }
 
@@ -209,8 +216,15 @@ fun Route.carRoutes(
                     pathParameter<String>("id") {
                         description = "MongoDB ObjectId of the car"
                     }
-                    body<CarPatchRequest> {
-                        description = "Fields that should be updated"
+                    multipartBody {
+                        description = "Multipart form data with updated car details and optional image"
+                        mediaTypes(ContentType.MultiPart.FormData)
+                        part<String>("data") {
+                            mediaTypes(ContentType.Application.Json)
+                        }
+                        part<ByteArray>("image") {
+                            mediaTypes(ContentType.Image.Any)
+                        }
                     }
                 }
 
