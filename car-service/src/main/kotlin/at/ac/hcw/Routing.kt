@@ -1,5 +1,6 @@
 package at.ac.hcw
 
+import at.ac.hcw.at.ac.hcw.CarBlobContainerClientKey
 import at.ac.hcw.routes.carRoutes
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.basicPublish
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.rabbitmq
@@ -11,9 +12,12 @@ fun Application.configureRouting() {
     val app = this
     val carService = attributes[CarServiceKey]
     val currencyClient = attributes[CurrencyClientKey]
+    val carBlobStorageClient = attributes[CarBlobContainerClientKey]
     routing {
         route("/api") {
             carRoutes(
+                carService = carService,
+                currencyClient = currencyClient,
                 onCarCreated = { carEvent ->
                     app.rabbitmq {
                         basicPublish {
@@ -32,8 +36,7 @@ fun Application.configureRouting() {
                         }
                     }
                 },
-                carService = carService,
-                currencyClient = currencyClient
+                blobStorageClient = carBlobStorageClient
             )
         }
     }

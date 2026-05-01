@@ -1,6 +1,7 @@
 package at.ac.hcw.dto
 
 import at.ac.hcw.CurrencyClient
+import at.ac.hcw.at.ac.hcw.service.BlobStorageService
 import at.ac.hcw.domain.Car
 import com.google.protobuf.Empty
 import currency.Currency
@@ -21,7 +22,6 @@ data class CarCreateRequest(
     val year: Int,
     val pricePerDay: Double,
     val description: String,
-    val imageName: String,
     val transmission: String,
     val power: Int,
     val fuelType: String
@@ -56,7 +56,7 @@ data class CarResponse(
     val available: Boolean
 )
 
-fun CarCreateRequest.toDomain(): Car =
+fun CarCreateRequest.toDomain(imageName: String): Car =
     Car(
         manufacturer = manufacturer,
         model = model,
@@ -75,7 +75,8 @@ private suspend fun CurrencyServiceGrpcKt.CurrencyServiceCoroutineStub.getSuppor
 
 suspend fun Car.toResponse(
     currencyService: CurrencyClient? = null,
-    toCurrency: String = "USD"
+    toCurrency: String = "USD",
+    blobStorageService: BlobStorageService? = null
 ): CarResponse {
     val price: CurrencyDto
     if (toCurrency.uppercase() == "USD")
@@ -105,6 +106,11 @@ suspend fun Car.toResponse(
         }
     }
 
+    var imageUrl: String? = null
+    if (blobStorageService != null) {
+        imageUrl = blobStorageService.getUrl(imageName)
+    }
+
 
     return CarResponse(
         id = id ?: "",
@@ -113,7 +119,7 @@ suspend fun Car.toResponse(
         year = year,
         pricePerDay = price,
         description = description,
-        imageName = imageName,
+        imageName = imageUrl?: "",
         transmission = transmission,
         power = power,
         fuelType = fuelType,

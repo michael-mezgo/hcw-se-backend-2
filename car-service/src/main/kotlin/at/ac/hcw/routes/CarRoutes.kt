@@ -1,15 +1,25 @@
 package at.ac.hcw.routes
 
 import at.ac.hcw.CurrencyClient
+import at.ac.hcw.at.ac.hcw.service.BlobStorageService
 import at.ac.hcw.dto.*
 import at.ac.hcw.service.CarService
-import io.github.smiley4.ktorswaggerui.dsl.routing.*
+import io.github.smiley4.ktorswaggerui.dsl.routing.delete
+import io.github.smiley4.ktorswaggerui.dsl.routing.get
+import io.github.smiley4.ktorswaggerui.dsl.routing.patch
+import io.github.smiley4.ktorswaggerui.dsl.routing.post
 import io.ktor.http.*
-import io.ktor.server.auth.authenticate
+import io.ktor.http.content.PartData
+import io.ktor.http.content.forEachPart
+import io.ktor.server.auth.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.utils.io.readRemaining
+import kotlinx.io.readByteArray
+import kotlinx.serialization.json.Json
+import java.util.UUID
 import javax.naming.ServiceUnavailableException
 
 fun Route.carRoutes(
@@ -17,6 +27,7 @@ fun Route.carRoutes(
     currencyClient: CurrencyClient? = null,
     onCarCreated: suspend (CarEvent) -> Unit = {},
     onCarDeleted: suspend (CarEvent) -> Unit = {},
+    blobStorageClient: BlobStorageService? = null
 ) {
     route("/cars") {
         get({
@@ -148,12 +159,41 @@ fun Route.carRoutes(
                     }
                 }
             }) {
-                val request = call.receive<CarCreateRequest>()
-                val createdId = carService.createCar(request.toDomain())
+                if (blobStorageClient == null) {
+                    call.respond(HttpStatusCode.ServiceUnavailable, "Blob storage service not available")
+                    return@post
+                }
 
-                onCarCreated(CarEvent(createdId))
+                var carData: CarCreateRequest? = null
+                var imageUrl: String? = null
 
-                call.respond(HttpStatusCode.Created, mapOf("id" to createdId))
+                call.receiveMultipart().forEachPart { part ->
+                    when {
+                        part is PartData.FormItem && part.name == "data" -> {
+                            carData = Json.decodeFromString(part.value)
+                        }
+                        part is PartData.FileItem && part.name == "image" -> {
+                            val bytes = part.provider().readRemaining().readByteArray()
+                            val ext = part.originalFileName?.substringAfterLast('.', "jpg") ?: "jpg"
+                            val blobName = "cars/${UUID.randomUUID()}.$ext"
+                            blobStorageClient.upload(blobName, bytes)
+                            imageUrl = blobName
+                        }
+                    }
+                    part.dispose()
+                }
+
+                if (carData == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Missing car data")
+                    return@post
+                } else if (imageUrl == null) {
+                    call.respond(HttpStatusCode.BadRequest, "Missing image url")
+                    return@post
+                } else {
+                    val createdId = carService.createCar(carData!!.toDomain(imageUrl))
+                    onCarCreated(CarEvent(createdId))
+                    call.respond(HttpStatusCode.Created, mapOf("id" to createdId))
+                }
             }
         }
 
@@ -200,17 +240,40 @@ fun Route.carRoutes(
                     return@patch
                 }
 
-                val patchRequest = call.receive<CarPatchRequest>()
-                val updatedCar = carService.patchCar(id, patchRequest)
-
-                if (updatedCar == null) {
-                    call.respond(HttpStatusCode.NotFound, "No Car with id $id found")
+                if (blobStorageClient == null) {
+                    call.respond(HttpStatusCode.ServiceUnavailable, "Blob storage service not available")
                     return@patch
                 }
 
+                var carData: CarPatchRequest? = null
+                var imageUrl: String? = null
+
+                call.receiveMultipart().forEachPart { part ->
+                    when {
+                        part is PartData.FormItem && part.name == "data" -> {
+                            carData = Json.decodeFromString(part.value)
+                        }
+                        part is PartData.FileItem && part.name == "image" -> {
+                            val bytes = part.provider().readRemaining().readByteArray()
+                            val ext = part.originalFileName?.substringAfterLast('.', "jpg") ?: "jpg"
+                            val blobName = "cars/${UUID.randomUUID()}.$ext"
+                            blobStorageClient.upload(blobName, bytes)
+                            imageUrl = blobName
+                        }
+                    }
+                    part.dispose()
+                }
+
+
                 try {
-                    val response = updatedCar.toResponse(currencyClient)
-                    call.respond(HttpStatusCode.OK, response)
+                    val dto = carData ?: throw BadRequestException("Missing car data")
+                    if (imageUrl != null) {
+                        val oldImage = carService.getCar(id)?.imageName?.takeIf { it.isNotBlank() }
+                        carService.patchCar(id, dto.copy(imageName = imageUrl))
+                        if (oldImage != null) blobStorageClient.delete(oldImage)
+                    } else {
+                        carService.patchCar(id, dto)
+                    }
                 } catch (e: BadRequestException) {
                     call.respond(HttpStatusCode.BadRequest, e.message ?: "Invalid request")
                 } catch (e: Exception) {

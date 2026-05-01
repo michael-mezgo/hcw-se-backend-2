@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.grpc.protobuf)
     implementation(libs.protobuf.kotlin)
     implementation("io.github.smiley4:ktor-swagger-ui:${swagger_ui_version}")
+    implementation("com.azure:azure-storage-blob:12.33.3")
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
