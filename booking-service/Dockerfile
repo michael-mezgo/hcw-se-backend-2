@@ -21,6 +21,7 @@ WORKDIR /app
 
 COPY --from=builder /app/booking-service/build/libs/*-all.jar app.jar
 
+USER nonroot:nonroot
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
