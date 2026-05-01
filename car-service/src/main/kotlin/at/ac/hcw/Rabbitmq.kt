@@ -16,7 +16,9 @@ fun Application.configureRabbitmq() {
     val rabbitMQScope = CoroutineScope(SupervisorJob() + exceptionHandler)
 
     install(RabbitMQ) {
-        uri = environment.config.tryGetString("rabbitmq.uri") ?: "amqp://guest:guest@localhost:5672"
+        uri = environment.config.tryGetString("rabbitmq.uri").also {
+            if (it == null) log.warn("rabbitmq.uri not configured, using default: amqp://guest:guest@localhost:5672")
+        } ?: "amqp://guest:guest@localhost:5672"
         defaultConnectionName = "default-connection"
         dispatcherThreadPollSize = 4
         tlsEnabled = false
@@ -71,7 +73,7 @@ fun Application.configureRabbitmq() {
         }
     }
 
-// Consume user.deleted
+// Consume booking.deleted
     rabbitmq {
         basicConsume {
             autoAck = true

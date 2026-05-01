@@ -10,27 +10,33 @@ import kotlinx.serialization.json.Json
 fun Application.configureRouting() {
     val app = this
     val carService = attributes[CarServiceKey]
+    val currencyClient = attributes[CurrencyClientKey]
+    val carBlobStorageClient = attributes[CarBlobContainerClientKey]
     routing {
-        carRoutes(
-            onCarCreated = { carEvent ->
-                app.rabbitmq {
-                    basicPublish {
-                        exchange = "car-events"
-                        routingKey = "car.created"
-                        message { Json.encodeToString(carEvent)}
+        route("/api") {
+            carRoutes(
+                carService = carService,
+                currencyClient = currencyClient,
+                onCarCreated = { carEvent ->
+                    app.rabbitmq {
+                        basicPublish {
+                            exchange = "car-events"
+                            routingKey = "car.created"
+                            message { Json.encodeToString(carEvent)}
+                        }
                     }
-                }
-            },
-            onCarDeleted = { carEvent ->
-                app.rabbitmq {
-                    basicPublish {
-                        exchange = "car-events"
-                        routingKey = "car.deleted"
-                        message { Json.encodeToString(carEvent) }
+                },
+                onCarDeleted = { carEvent ->
+                    app.rabbitmq {
+                        basicPublish {
+                            exchange = "car-events"
+                            routingKey = "car.deleted"
+                            message { Json.encodeToString(carEvent) }
+                        }
                     }
-                }
-            },
-            carService = carService
-        )
+                },
+                blobStorageClient = carBlobStorageClient
+            )
+        }
     }
 }

@@ -3,6 +3,9 @@ kotlin = "2.3.20"
 ktor = "3.4.1"
 logback = "1.5.21"
 mongodb = "4.11.5"
+grpc = "1.68.1"
+grpc-kotlin = "1.4.1"
+protobuf = "3.25.5"
 
 [libraries]
 damirdenis-tudor-ktorServerRabbitmq = { module = "io.github.damirdenis-tudor:ktor-server-rabbitmq", version = "1.5.0" }
@@ -10,9 +13,11 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 mongodb-bson = { module = "org.mongodb:bson", version.ref = "mongodb" }
 mongodb-driverCore = { module = "org.mongodb:mongodb-driver-core", version.ref = "mongodb" }
 mongodb-driverSync = { module = "org.mongodb:mongodb-driver-sync", version.ref = "mongodb" }
+grpc-kotlin-stub = { module = "io.grpc:grpc-kotlin-stub", version.ref = "grpc-kotlin" }
+grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }
+grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpc" }
+protobuf-kotlin = { module = "com.google.protobuf:protobuf-kotlin", version.ref = "protobuf" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-ktor = { id = "io.ktor.plugin", version.ref = "ktor" }

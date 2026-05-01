@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option csharp_namespace = "CurrencyConverter.Web";
+
+package currency;
+
+import "google/protobuf/empty.proto";
+
+service CurrencyService {
+  rpc Convert(ConvertRequest) returns (ConvertResponse);
+  rpc GetSupportedCurrencies(google.protobuf.Empty) returns (SupportedCurrenciesResponse);
+}
+
+message ConvertRequest {
+  string from_currency = 1;
+  string to_currency = 2;
+  double amount = 3;
+  string api_key = 4;
+}
+
+message ConvertResponse {
+  double result = 1;
+}
+
+message SupportedCurrenciesResponse {
+  repeated string currencies = 1;
+}

@@ -1,10 +1,17 @@
 package at.ac.hcw.dto
 
+import at.ac.hcw.CurrencyClient
+import at.ac.hcw.service.BlobStorageService
 import at.ac.hcw.domain.Car
+import at.ac.hcw.domain.FuelType
+import com.google.protobuf.Empty
+import currency.Currency
+import currency.CurrencyServiceGrpcKt
+import io.grpc.Status
+import io.grpc.StatusException
+import io.ktor.server.plugins.BadRequestException
 import kotlinx.serialization.Serializable
-
-@Serializable
-data class CarEvent(val carId: String)
+import javax.naming.ServiceUnavailableException
 
 @Serializable
 data class CarCreateRequest(
@@ -13,10 +20,9 @@ data class CarCreateRequest(
     val year: Int,
     val pricePerDay: Double,
     val description: String,
-    val imageName: String,
     val transmission: String,
     val power: Int,
-    val fuelType: String
+    val fuelType: FuelType
 )
 
 @Serializable
@@ -29,7 +35,7 @@ data class CarPatchRequest(
     val imageName: String? = null,
     val transmission: String? = null,
     val power: Int? = null,
-    val fuelType: String? = null
+    val fuelType: FuelType? = null
 ) {
 }
 
@@ -39,16 +45,16 @@ data class CarResponse(
     val manufacturer: String,
     val model: String,
     val year: Int,
-    val pricePerDay: Double,
+    val pricePerDay: CurrencyDto,
     val description: String,
     val imageName: String,
     val transmission: String,
     val power: Int,
-    val fuelType: String,
-    val available: Boolean
+    val fuelType: FuelType,
+    val isAvailable: Boolean
 )
 
-fun CarCreateRequest.toDomain(): Car =
+fun CarCreateRequest.toDomain(imageName: String): Car =
     Car(
         manufacturer = manufacturer,
         model = model,
@@ -62,17 +68,59 @@ fun CarCreateRequest.toDomain(): Car =
         available = true
     )
 
-fun Car.toResponse(): CarResponse =
-    CarResponse(
+private suspend fun CurrencyServiceGrpcKt.CurrencyServiceCoroutineStub.getSupportedCurrenciesList(): List<String> =
+    getSupportedCurrencies(Empty.getDefaultInstance()).currenciesList
+
+suspend fun Car.toResponse(
+    currencyService: CurrencyClient? = null,
+    toCurrency: String = "USD",
+    blobStorageService: BlobStorageService? = null
+): CarResponse {
+    val price: CurrencyDto
+    if (toCurrency.uppercase() == "USD")
+        price = CurrencyDto(amount = pricePerDay, currencyCode = "USD")
+    else {
+        if (currencyService == null)
+            throw ServiceUnavailableException("Currency conversion not available.")
+
+        val currencyName = toCurrency.uppercase().trim()
+        if (!currencyService.stub.getSupportedCurrenciesList().contains(currencyName))
+            throw BadRequestException("Currency $currencyName is not supported.")
+
+        val request: Currency.ConvertRequest = Currency.ConvertRequest.newBuilder()
+            .setAmount(pricePerDay)
+            .setFromCurrency("USD")
+            .setToCurrency(currencyName)
+            .setApiKey(currencyService.apiKey)
+            .build()
+
+        try {
+            val response = currencyService.stub.convert(request)
+            price = CurrencyDto(amount = response.result, currencyCode = currencyName)
+        } catch (e: StatusException) {
+            if (e.status.code == Status.Code.UNAUTHENTICATED)
+                throw ServiceUnavailableException("Currency service authentication failed: invalid API key.")
+            throw e
+        }
+    }
+
+    var imageUrl: String? = null
+    if (blobStorageService != null) {
+        imageUrl = blobStorageService.getUrl(imageName)
+    }
+
+
+    return CarResponse(
         id = id ?: "",
         manufacturer = manufacturer,
         model = model,
         year = year,
-        pricePerDay = pricePerDay,
+        pricePerDay = price,
         description = description,
-        imageName = imageName,
+        imageName = imageUrl?: "",
         transmission = transmission,
         power = power,
         fuelType = fuelType,
-        available = available
+        isAvailable = available
     )
+}

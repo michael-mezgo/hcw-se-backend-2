@@ -4,6 +4,7 @@ import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import kotlinx.coroutines.Dispatchers
 import at.ac.hcw.domain.Car
+import at.ac.hcw.domain.FuelType
 import at.ac.hcw.dto.CarPatchRequest
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.FindOneAndUpdateOptions
@@ -11,10 +12,12 @@ import com.mongodb.client.model.ReturnDocument
 import kotlinx.coroutines.withContext
 import org.bson.Document
 import org.bson.types.ObjectId
+import org.slf4j.LoggerFactory
 
 class MongoCarRepository (
     database: MongoDatabase
 ) : CarRepository {
+    private val logger = LoggerFactory.getLogger(MongoCarRepository::class.java)
     private val collection: MongoCollection<Document> = database.getCollection("cars")
 
     override suspend fun findAll(): List<Car> = withContext(Dispatchers.IO) {
@@ -71,6 +74,13 @@ class MongoCarRepository (
         result.matchedCount > 0
     }
 
+    override suspend fun findAllAvailable(): List<Car> = withContext(Dispatchers.IO){
+        collection.find()
+            .filter { it.getBoolean("available") == true }
+            .map { it.toCar() }
+            .toList()
+    }
+
     private fun Car.toDocument(): Document =
         Document()
             .append("manufacturer", manufacturer)
@@ -81,7 +91,7 @@ class MongoCarRepository (
             .append("imageName", imageName)
             .append("transmission", transmission)
             .append("power", power)
-            .append("fuelType", fuelType)
+            .append("fuelType", fuelType.name)
             .append("available", available)
 
     private fun Document.toCar(): Car =
@@ -95,7 +105,12 @@ class MongoCarRepository (
             imageName = getString("imageName") ?: "",
             transmission = getString("transmission") ?: "",
             power = (get("power") as? Number)?.toInt() ?: 0,
-            fuelType = getString("fuelType") ?: "",
+            fuelType = getString("fuelType")?.let { raw ->
+                runCatching { FuelType.valueOf(raw) }.getOrElse {
+                    logger.warn("Invalid fuelType value '$raw' in database, defaulting to ${FuelType.GASOLINE}")
+                    FuelType.GASOLINE
+                }
+            } ?: FuelType.GASOLINE,
             available = getBoolean("available") ?: false
         )
 
@@ -110,7 +125,7 @@ class MongoCarRepository (
         imageName?.let { document["imageName"] = it }
         transmission?.let { document["transmission"] = it }
         power?.let { document["power"] = it }
-        fuelType?.let { document["fuelType"] = it }
+        fuelType?.let { document["fuelType"] = it.name }
 
         return document
     }
