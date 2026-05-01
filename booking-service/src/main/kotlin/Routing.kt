@@ -1,43 +1,39 @@
 package at.ac.hcw
 
-import io.github.smiley4.ktorswaggerui.dsl.routing.get
-import io.ktor.http.*
+import at.ac.hcw.routes.bookingRoutes
+import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.basicPublish
+import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.rabbitmq
 import io.ktor.server.application.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.resources.*
+import kotlinx.serialization.json.Json
 
 fun Application.configureRouting() {
+    val bookingService = attributes[BookingServiceKey]
+    val app = this
+
     routing {
-        get("/", {
-            tags("General")
-            description = "Hello World endpoint"
-            response {
-                HttpStatusCode.OK to {
-                    description = "Returns a greeting text"
-                    body<String>()
+        route("/api") {
+            bookingRoutes(
+                bookingService = bookingService,
+                onBookingCreated = { event ->
+                    app.rabbitmq {
+                        basicPublish {
+                            exchange = "booking-events"
+                            routingKey = "booking.created"
+                            message { Json.encodeToString(event) }
+                        }
+                    }
+                },
+                onBookingCancelled = { event ->
+                    app.rabbitmq {
+                        basicPublish {
+                            exchange = "booking-events"
+                            routingKey = "booking.deleted"
+                            message { Json.encodeToString(event) }
+                        }
+                    }
                 }
-            }
-        }) {
-            call.respondText("Hello, World!")
-        }
-
-        get<Articles> { article ->
-            // Get all articles ...
-            call.respond("List of articles sorted starting from ${article.sort}")
-        }
-
-        get("/json/kotlinx-serialization", {
-            tags("JSON")
-            description = "Example JSON response using kotlinx serialization"
-            response {
-                HttpStatusCode.OK to {
-                    description = "A simple JSON object"
-                    body<Map<String, String>>()
-                }
-            }
-        }) {
-            call.respond(mapOf("hello" to "world"))
+            )
         }
     }
 }

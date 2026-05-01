@@ -1,10 +1,9 @@
 package at.ac.hcw
 
-import io.ktor.server.application.*
 import io.ktor.http.*
-import io.ktor.server.plugins.cors.routing.*
-import io.ktor.server.response.*
+import io.ktor.server.application.*
 import io.ktor.server.plugins.compression.*
+import io.ktor.server.plugins.cors.routing.*
 
 fun Application.configureHttp() {
     install(CORS) {
