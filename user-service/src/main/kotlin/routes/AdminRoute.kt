@@ -30,6 +30,16 @@ fun Route.adminRoutes(
                 tags("Admin")
                 summary = "Get all users"
                 description = "Returns all users in the system. Requires admin privileges."
+
+                response {
+                    HttpStatusCode.OK to {
+                        description = "List of users"
+                        body<List<UserResponse>>()
+                    }
+                    HttpStatusCode.Forbidden to {
+                        description = "Admin privileges required"
+                    }
+                }
             }) {
                 try {
                     val users = userService.findAll()
@@ -47,6 +57,26 @@ fun Route.adminRoutes(
                 tags("Admin")
                 summary = "Create user"
                 description = "Creates a new user. Admins can assign admin privileges."
+
+                request {
+                    body<AdminUserCreate> {
+                        description = "User data"
+                        required = true
+                    }
+                }
+
+                response {
+                    HttpStatusCode.Created to {
+                        description = "User created successfully"
+                        body<Map<String, String>>()
+                    }
+                    HttpStatusCode.Conflict to {
+                        description = "Username or email already exists"
+                    }
+                    HttpStatusCode.Forbidden to {
+                        description = "Admin privileges required"
+                    }
+                }
             }) {
                 try {
                     val dto = call.receive<AdminUserCreate>()
@@ -67,6 +97,30 @@ fun Route.adminRoutes(
             get("/{id}", {
                 tags("Admin")
                 summary = "Get user by ID"
+                description = "Returns a specific user by ID. Requires admin privileges."
+
+                request {
+                    pathParameter<String>("id") {
+                        description = "User ID"
+                        required = true
+                    }
+                }
+
+                response {
+                    HttpStatusCode.OK to {
+                        description = "User found"
+                        body<UserResponse>()
+                    }
+                    HttpStatusCode.NotFound to {
+                        description = "User not found"
+                    }
+                    HttpStatusCode.BadRequest to {
+                        description = "Missing or invalid ID"
+                    }
+                    HttpStatusCode.Forbidden to {
+                        description = "Admin privileges required"
+                    }
+                }
             }) {
                 try {
                     val id = call.parameters["id"]
@@ -88,6 +142,34 @@ fun Route.adminRoutes(
             patch("/{id}", {
                 tags("Admin")
                 summary = "Update user"
+                description = "Updates any user. Requires admin privileges."
+
+                request {
+                    pathParameter<String>("id") {
+                        description = "User ID"
+                        required = true
+                    }
+                    body<AdminUserUpdate> {
+                        description = "Fields to update"
+                        required = true
+                    }
+                }
+
+                response {
+                    HttpStatusCode.OK to {
+                        description = "User updated successfully"
+                        body<UserResponse>()
+                    }
+                    HttpStatusCode.NotFound to {
+                        description = "User not found"
+                    }
+                    HttpStatusCode.BadRequest to {
+                        description = "Missing or invalid ID"
+                    }
+                    HttpStatusCode.Forbidden to {
+                        description = "Admin privileges required"
+                    }
+                }
             }) {
                 try {
                     val id = call.parameters["id"]
@@ -111,6 +193,29 @@ fun Route.adminRoutes(
             delete("/{id}", {
                 tags("Admin")
                 summary = "Delete user"
+                description = "Deletes a user by ID. Admins cannot delete themselves."
+
+                request {
+                    pathParameter<String>("id") {
+                        description = "User ID"
+                        required = true
+                    }
+                }
+
+                response {
+                    HttpStatusCode.NoContent to {
+                        description = "User deleted successfully"
+                    }
+                    HttpStatusCode.NotFound to {
+                        description = "User not found"
+                    }
+                    HttpStatusCode.BadRequest to {
+                        description = "Missing or invalid ID"
+                    }
+                    HttpStatusCode.Forbidden to {
+                        description = "Admin cannot delete themselves or lacks permissions"
+                    }
+                }
             }) {
                 try {
                     val principal = call.principal<JwtPrincipal>()!!
