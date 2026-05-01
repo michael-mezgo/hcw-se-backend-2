@@ -28,7 +28,7 @@ fun Application.configureRouting() {
                     app.rabbitmq {
                         basicPublish {
                             exchange = "booking-events"
-                            routingKey = "booking.cancelled"
+                            routingKey = "booking.deleted"
                             message { Json.encodeToString(event) }
                         }
                     }
