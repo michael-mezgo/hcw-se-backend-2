@@ -51,7 +51,7 @@ data class CarResponse(
     val transmission: String,
     val power: Int,
     val fuelType: FuelType,
-    val available: Boolean
+    val isAvailable: Boolean
 )
 
 fun CarCreateRequest.toDomain(imageName: String): Car =
@@ -121,6 +121,6 @@ suspend fun Car.toResponse(
         transmission = transmission,
         power = power,
         fuelType = fuelType,
-        available = available
+        isAvailable = available
     )
 }

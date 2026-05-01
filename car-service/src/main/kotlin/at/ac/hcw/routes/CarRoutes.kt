@@ -63,9 +63,9 @@ fun Route.carRoutes(
                 val onlyAvailable = call.request.queryParameters["available"]?.toBooleanStrictOrNull()
                 val cars = if (onlyAvailable == true)
                     carService.getAllAvailableCars()
-                    .map { it.toResponse(currencyClient, currency) }
+                    .map { it.toResponse(currencyClient, currency, blobStorageClient) }
                 else carService.getAllCars()
-                    .map { it.toResponse(currencyClient, currency) }
+                    .map { it.toResponse(currencyClient, currency, blobStorageClient) }
 
                 call.respond(HttpStatusCode.OK, cars)
             } catch (e: BadRequestException) {
@@ -125,7 +125,7 @@ fun Route.carRoutes(
             }
 
             try {
-                val response = car.toResponse(currencyClient, currency)
+                val response = car.toResponse(currencyClient, currency, blobStorageClient)
                 call.respond(HttpStatusCode.OK, response)
             } catch (e: BadRequestException) {
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "Invalid request")
@@ -200,7 +200,7 @@ fun Route.carRoutes(
                     call.respond(HttpStatusCode.BadRequest, "Missing car data")
                     return@post
                 } else if (imageUrl == null) {
-                    call.respond(HttpStatusCode.BadRequest, "Missing image url")
+                    call.respond(HttpStatusCode.BadRequest, "Missing image file")
                     return@post
                 } else {
                     val createdId = carService.createCar(carData!!.toDomain(imageUrl))
@@ -291,8 +291,12 @@ fun Route.carRoutes(
                         val oldImage = carService.getCar(id)?.imageName?.takeIf { it.isNotBlank() }
                         carService.patchCar(id, dto.copy(imageName = imageUrl))
                         if (oldImage != null) blobStorageClient.delete(oldImage)
+                        call.respond(HttpStatusCode.OK, message = "Car updated successfully with new image")
+                        return@patch
                     } else {
                         carService.patchCar(id, dto)
+                        call.respond(HttpStatusCode.OK, message = "Car updated successfully")
+                        return@patch
                     }
                 } catch (e: BadRequestException) {
                     call.respond(HttpStatusCode.BadRequest, e.message ?: "Invalid request")
