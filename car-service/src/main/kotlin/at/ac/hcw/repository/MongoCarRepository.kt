@@ -12,10 +12,12 @@ import com.mongodb.client.model.ReturnDocument
 import kotlinx.coroutines.withContext
 import org.bson.Document
 import org.bson.types.ObjectId
+import org.slf4j.LoggerFactory
 
 class MongoCarRepository (
     database: MongoDatabase
 ) : CarRepository {
+    private val logger = LoggerFactory.getLogger(MongoCarRepository::class.java)
     private val collection: MongoCollection<Document> = database.getCollection("cars")
 
     override suspend fun findAll(): List<Car> = withContext(Dispatchers.IO) {
@@ -96,7 +98,12 @@ class MongoCarRepository (
             imageName = getString("imageName") ?: "",
             transmission = getString("transmission") ?: "",
             power = (get("power") as? Number)?.toInt() ?: 0,
-            fuelType = getString("fuelType")?.let { runCatching { FuelType.valueOf(it) }.getOrNull() } ?: FuelType.GASOLINE,
+            fuelType = getString("fuelType")?.let { raw ->
+                runCatching { FuelType.valueOf(raw) }.getOrElse {
+                    logger.warn("Invalid fuelType value '$raw' in database, defaulting to ${FuelType.GASOLINE}")
+                    FuelType.GASOLINE
+                }
+            } ?: FuelType.GASOLINE,
             available = getBoolean("available") ?: false
         )
 
