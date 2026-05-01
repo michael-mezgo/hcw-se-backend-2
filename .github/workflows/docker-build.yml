@@ -59,6 +59,7 @@ jobs:
         with:
           context: .
           file: booking-service/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
           tags: |
             ghcr.io/${{ github.repository }}/booking-service:latest
@@ -88,6 +89,7 @@ jobs:
         with:
           context: .
           file: car-service/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
           tags: |
             ghcr.io/${{ github.repository }}/car-service:latest
@@ -118,6 +120,7 @@ jobs:
         with:
           context: .
           file: user-service/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
           tags: |
             ghcr.io/${{ github.repository }}/user-service:latest
