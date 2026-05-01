@@ -1,12 +1,28 @@
 ktor:
   deployment:
-    port: 8080
+    port: ${?PORT}
   application:
     modules:
       - at.ac.hcw.HttpKt.configureHttp
       - at.ac.hcw.SerializationKt.configureSerialization
-      - at.ac.hcw.SecurityKt.configureSecurity
-      #- at.ac.hcw.MongoKt.configureMongo
-      #- at.ac.hcw.RabbitmqKt.configureRabbitmq
+      - at.ac.hcw.security.JwtValidatorKt.configureSecurity
+      - at.ac.hcw.MongoKt.configureMongo
+      - at.ac.hcw.RabbitmqKt.configureRabbitmq
       - at.ac.hcw.ResourcesKt.configureResources
       - at.ac.hcw.RoutingKt.configureRouting
+      - at.ac.hcw.OpenApiKt.configureOpenApi
+
+db:
+  mongo:
+    host: ${MONGO_HOST}
+    port: ${MONGO_PORT}
+    database:
+      name: ${MONGO_DB}
+
+rabbitmq:
+  uri: ${RABBITMQ_URI}
+
+jwt:
+  secret: ${JWT_SECRET}
+  issuer: ${JWT_ISSUER}
+  audience: ${JWT_AUDIENCE}
