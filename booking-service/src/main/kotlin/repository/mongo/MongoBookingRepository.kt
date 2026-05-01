@@ -22,15 +22,15 @@ class MongoBookingRepository(database: MongoDatabase) : BookingRepositoryInterfa
     }
 
     override suspend fun findById(id: String): Booking? = withContext(Dispatchers.IO) {
-        if (!ObjectId.isValid(id)) {
-            return@withContext null
+        if(!ObjectId.isValid(id)) {
+            throw IllegalArgumentException("Invalid booking ID format: $id")
         }
         collection.find(Filters.eq("_id", ObjectId(id))).first()?.toBooking()
     }
 
     override suspend fun deleteById(id: String): Booking? = withContext(Dispatchers.IO) {
-        if (!ObjectId.isValid(id)) {
-            return@withContext null
+        if(!ObjectId.isValid(id)) {
+            throw IllegalArgumentException("Invalid booking ID format: $id")
         }
         collection.findOneAndDelete(Filters.eq("_id", ObjectId(id)))?.toBooking()
     }

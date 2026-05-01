@@ -52,7 +52,10 @@ fun Route.bookingRoutes(
                     val principal = call.principal<JwtPrincipal>()!!
 
                     if(principal.userId != request.userId)
+                    {
                         call.respond(HttpStatusCode.Forbidden, "User doesn't have permission to create bookings for another user")
+                        return@post
+                    }
 
                     val booking = bookingService.create(request)
                     onBookingCreated(booking.toCreatedEvent())
@@ -113,6 +116,9 @@ fun Route.bookingRoutes(
                 } catch (e: MongoException) {
                     println("Error: ${e.message}")
                     call.respond(HttpStatusCode.ServiceUnavailable, "Database error")
+                } catch (e: IllegalArgumentException) {
+                    println("Error: ${e.message}")
+                    call.respond(HttpStatusCode.BadRequest, e.message ?: "Bad request")
                 } catch (e: Exception) {
                     println("Error: ${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, "Unknown server error - contact the admin")
