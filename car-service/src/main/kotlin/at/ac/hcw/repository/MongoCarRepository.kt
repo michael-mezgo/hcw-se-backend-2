@@ -71,6 +71,13 @@ class MongoCarRepository (
         result.matchedCount > 0
     }
 
+    override suspend fun findAllAvailable(): List<Car> = withContext(Dispatchers.IO){
+        collection.find()
+            .filter { it.getBoolean("available") == true }
+            .map { it.toCar() }
+            .toList()
+    }
+
     private fun Car.toDocument(): Document =
         Document()
             .append("manufacturer", manufacturer)

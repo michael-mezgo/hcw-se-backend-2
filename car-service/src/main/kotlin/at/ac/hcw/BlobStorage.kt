@@ -1,6 +1,6 @@
-package at.ac.hcw.at.ac.hcw
+package at.ac.hcw
 
-import at.ac.hcw.at.ac.hcw.service.BlobStorageService
+import at.ac.hcw.service.BlobStorageService
 import io.ktor.server.application.*
 import io.ktor.util.*
 

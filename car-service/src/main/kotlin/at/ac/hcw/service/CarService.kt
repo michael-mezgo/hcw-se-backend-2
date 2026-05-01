@@ -10,6 +10,9 @@ class CarService (
     suspend fun getAllCars(): List<Car> =
         carRepository.findAll()
 
+    suspend fun getAllAvailableCars(): List<Car> =
+        carRepository.findAllAvailable()
+
     suspend fun getCar(id: String): Car? =
         carRepository.findById(id)
 

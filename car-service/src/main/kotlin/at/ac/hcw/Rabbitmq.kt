@@ -71,7 +71,7 @@ fun Application.configureRabbitmq() {
         }
     }
 
-// Consume user.deleted
+// Consume booking.deleted
     rabbitmq {
         basicConsume {
             autoAck = true

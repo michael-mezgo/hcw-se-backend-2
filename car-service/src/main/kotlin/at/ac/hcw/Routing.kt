@@ -1,6 +1,5 @@
 package at.ac.hcw
 
-import at.ac.hcw.at.ac.hcw.CarBlobContainerClientKey
 import at.ac.hcw.routes.carRoutes
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.basicPublish
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.rabbitmq

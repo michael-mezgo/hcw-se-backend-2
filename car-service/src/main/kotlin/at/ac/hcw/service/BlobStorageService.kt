@@ -1,4 +1,4 @@
-package at.ac.hcw.at.ac.hcw.service
+package at.ac.hcw.service
 
 import com.azure.storage.blob.BlobContainerClient
 import com.azure.storage.blob.BlobServiceClientBuilder

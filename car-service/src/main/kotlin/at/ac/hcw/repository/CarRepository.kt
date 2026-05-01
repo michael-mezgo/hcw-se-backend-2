@@ -10,4 +10,5 @@ interface CarRepository {
     suspend fun patch(id: String, patch: CarPatchRequest): Car?
     suspend fun delete(id: String): Boolean
     suspend fun setAvailability(id: String, availability: Boolean): Boolean
+    suspend fun findAllAvailable(): List<Car>
 }

@@ -1,25 +1,24 @@
 package at.ac.hcw.routes
 
 import at.ac.hcw.CurrencyClient
-import at.ac.hcw.at.ac.hcw.service.BlobStorageService
 import at.ac.hcw.dto.*
+import at.ac.hcw.service.BlobStorageService
 import at.ac.hcw.service.CarService
 import io.github.smiley4.ktorswaggerui.dsl.routing.delete
 import io.github.smiley4.ktorswaggerui.dsl.routing.get
 import io.github.smiley4.ktorswaggerui.dsl.routing.patch
 import io.github.smiley4.ktorswaggerui.dsl.routing.post
 import io.ktor.http.*
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
+import io.ktor.http.content.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.utils.io.readRemaining
+import io.ktor.utils.io.*
 import kotlinx.io.readByteArray
 import kotlinx.serialization.json.Json
-import java.util.UUID
+import java.util.*
 import javax.naming.ServiceUnavailableException
 
 fun Route.carRoutes(
@@ -36,6 +35,7 @@ fun Route.carRoutes(
             description = "Returns all cars. Optionally converts the daily price to the requested currency."
 
             request {
+                queryParameter<Boolean>("available") { description = "If true, only available cars are returned"; required = false }
                 queryParameter<String>("currency") {
                     description = "Optional target currency for price conversion. Defaults to USD."
                 }
@@ -52,13 +52,19 @@ fun Route.carRoutes(
                 HttpStatusCode.InternalServerError to {
                     description = "Unknown Error!"
                 }
-                HttpStatusCode.ServiceUnavailable to {description = "Service unavailable"}
+                HttpStatusCode.ServiceUnavailable to {
+                    description = "Service unavailable"
+                }
             }
         }) {
             val currency = call.request.queryParameters["currency"] ?: "USD"
 
             try {
-                val cars = carService.getAllCars()
+                val onlyAvailable = call.request.queryParameters["available"]?.toBooleanStrictOrNull()
+                val cars = if (onlyAvailable == true)
+                    carService.getAllAvailableCars()
+                    .map { it.toResponse(currencyClient, currency) }
+                else carService.getAllCars()
                     .map { it.toResponse(currencyClient, currency) }
 
                 call.respond(HttpStatusCode.OK, cars)
@@ -78,7 +84,7 @@ fun Route.carRoutes(
             description = "Returns details for a specific car by its MongoDB ObjectId."
 
             request {
-                pathParameter<String>("id") {
+                pathParameter<String>("_id") {
                     description = "MongoDB ObjectId of the car"
                 }
                 queryParameter<String>("currency") {
@@ -138,9 +144,9 @@ fun Route.carRoutes(
                 description = "Creates a new car. This endpoint is intended for admins."
 
                 request {
-                    body<CarCreateRequest> {
-                        description = "Car data for the new car"
-                    }
+                     multipartBody {
+                         description = "Multipart form data containing 'form data' (CarCreateRequest as JSON) and 'image' (car image file)"
+                     }
                 }
 
                 response {
@@ -211,6 +217,9 @@ fun Route.carRoutes(
                     }
                     body<CarPatchRequest> {
                         description = "Fields that should be updated"
+                    }
+                    multipartBody {
+                        description = "Multipart form data containing 'form data' (CarPatchRequest as JSON) and 'image' (car image file)"
                     }
                 }
 
