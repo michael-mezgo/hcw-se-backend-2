@@ -1,6 +1,8 @@
 package at.ac.hcw
 
 import currency.CurrencyServiceGrpcKt
+import io.grpc.LoadBalancerRegistry
+import io.grpc.internal.PickFirstLoadBalancerProvider
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import io.ktor.server.application.*
 import io.ktor.server.config.tryGetString
@@ -24,6 +26,12 @@ fun Application.configureGrpc() {
     val apiKey = environment.config.tryGetString("grpc.currency.apiKey").also {
         if (it == null) log.warn("grpc.currency.apiKey not configured, using empty string")
     } ?: ""
+
+    // ShadowJar does not reliably merge META-INF/services for gRPC providers
+    val lbRegistry = LoadBalancerRegistry.getDefaultRegistry()
+    if (lbRegistry.getProvider("pick_first") == null) {
+        lbRegistry.register(PickFirstLoadBalancerProvider())
+    }
 
     val channel = NettyChannelBuilder.forAddress(InetSocketAddress(host, port))
         .usePlaintext()

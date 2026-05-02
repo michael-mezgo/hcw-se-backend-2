@@ -36,7 +36,8 @@ class AuthService(
             firstName = dto.firstName,
             lastName = dto.lastName,
             licenseNumber = dto.licenseNumber,
-            licenseValidUntil = dto.licenseValidUntil
+            licenseValidUntil = dto.licenseValidUntil,
+            preferredCurrency = dto.preferredCurrency
         )
 
         userRepository.create(user)

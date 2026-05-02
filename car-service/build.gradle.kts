@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 val swagger_ui_version: String by project
 
 plugins {
@@ -5,6 +7,10 @@ plugins {
     alias(ktorLibs.plugins.ktor)
     alias(libs.plugins.kotlin.serialization)
     id("com.google.protobuf") version "0.9.4"
+}
+
+tasks.withType<ShadowJar> {
+    mergeServiceFiles()
 }
 
 group = "at.ac.hcw"
@@ -42,6 +48,7 @@ dependencies {
     implementation(libs.protobuf.kotlin)
     implementation("io.github.smiley4:ktor-swagger-ui:${swagger_ui_version}")
     implementation("com.azure:azure-storage-blob:12.33.3")
+    implementation("io.grpc:grpc-core:1.68.1")
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)

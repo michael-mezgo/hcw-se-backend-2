@@ -13,7 +13,8 @@ data class DatabaseUser(
     var lastName: String = "",
     var licenseNumber: String = "",
     var licenseValidUntil: String = "",
-    var isAdmin: Boolean = false
+    var isAdmin: Boolean = false,
+    var preferredCurrency: String = ""
 )
 
 fun DatabaseUser.toEvent() = UserEvent(id)
@@ -27,4 +28,5 @@ fun DatabaseUser.toResponse() = UserResponse(
     licenseNumber = licenseNumber,
     licenseValidUntil = licenseValidUntil,
     isAdmin = isAdmin,
+    preferredCurrency = preferredCurrency,
 )
