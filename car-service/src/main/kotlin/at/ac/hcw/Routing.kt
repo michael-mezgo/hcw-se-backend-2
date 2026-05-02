@@ -5,6 +5,7 @@ import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.basicPublish
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.rabbitmq
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
+import kotlinx.serialization.json.Json
 
 fun Application.configureRouting() {
     val app = this
