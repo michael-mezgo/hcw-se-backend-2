@@ -137,7 +137,24 @@ services:
         condition: service_healthy
       mongo-user:
         condition: service_started
-  
+
+  frontend:
+    image: ghcr.io/michael-mezgo/hcw-se-frontend-2:latest
+    container_name: frontend
+    ports:
+      - "80:80"
+    environment:
+      USER_SERVICE_URL: http://user-service:8080
+      CAR_SERVICE_URL: http://car-service:8080
+      BOOKING_SERVICE_URL: http://booking-service:8080
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+    networks:
+      - se-net
+    depends_on:
+      - user-service
+      - car-service
+      - booking-service
+
 volumes:
   mongo-user-data:
   mongo-car-data:
