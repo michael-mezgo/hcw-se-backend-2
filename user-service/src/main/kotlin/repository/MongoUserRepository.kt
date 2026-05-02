@@ -47,12 +47,16 @@ class MongoUserRepository(
     }
 
     override suspend fun update(id: String, user: DatabaseUser): Boolean {
-        val result = collection.replaceOne(eq("_id", id), user)
-        return result.modifiedCount > 0
+        return withContext(Dispatchers.IO) {
+            val result = collection.replaceOne(eq("_id", id), user)
+            return@withContext result.modifiedCount > 0
+        }
     }
 
     override suspend fun delete(id: String): Boolean {
-        val result = collection.deleteOne(eq("_id", id))
-        return result.deletedCount > 0
+        return withContext(Dispatchers.IO) {
+            val result = collection.deleteOne(eq("_id", id))
+            return@withContext result.deletedCount > 0
+        }
     }
 }
