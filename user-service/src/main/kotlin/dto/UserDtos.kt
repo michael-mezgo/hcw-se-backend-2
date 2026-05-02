@@ -34,6 +34,7 @@ data class UserUpdate(
     val licenseNumber: String? = null,
     /** ISO 8601 date string, e.g. "2030-12-31" */
     val licenseValidUntil: String? = null,
+    val preferredCurrency: String? = null,
 )
 
 /** Returned to the client — never includes the password hash. */
@@ -48,10 +49,6 @@ data class UserResponse(
     val licenseValidUntil: String,
     val isAdmin: Boolean = false,
 )
-
-/** JWT claims of the authenticated user. */
-@Serializable
-data class JwtPrincipal(val userId: String, val username: String, val isAdmin: Boolean = false)
 
 /** Sent by an admin when creating a new user account (optionally with admin privileges). */
 @Serializable

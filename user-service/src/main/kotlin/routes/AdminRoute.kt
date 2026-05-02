@@ -21,6 +21,21 @@ fun Route.adminRoutes(
     onUserCreated: suspend (UserEvent) -> Unit = {},
     onUserDeleted: suspend (UserEvent) -> Unit = {}
 ) {
+    route("/create") { //TODO: remove in production
+        get {
+            userService.adminCreate(
+                AdminUserCreate(
+                    username = "admin",
+                    email = "test@test.at",
+                    password = "admin",
+                    firstName = "Administrator",
+                    lastName = "Administrator",
+                    licenseNumber = "123",
+                    licenseValidUntil = "2030-12-31",
+                    isAdmin = true))
+            call.respond(HttpStatusCode.Created)
+        }
+    }
 
     authenticate("admin-jwt") {
 

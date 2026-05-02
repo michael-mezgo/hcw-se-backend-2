@@ -3,14 +3,22 @@ services:
     image: rabbitmq:4.3.0-management-alpine
     container_name: rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: seuser
+      RABBITMQ_DEFAULT_PASS: Passw0rd
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 30s
+  
+  currency-service:
+    image: ghcr.io/michael-mezgo/hcw-se-currency-converter-2:latest
+    container_name: currency-service
+    environment:
+      ECB_URL: https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml
+      API_KEY: secret123
+      PORT: 5125
 
   mongo-user:
     image: mongodb/mongodb-community-server:latest-slim
@@ -43,7 +51,9 @@ services:
       - mongo-booking-data:/data/db
 
   booking-service:
-    image: ghcr.io/michael-mezgo/hcw-se-backend-2/booking-service:latest
+    build:
+      context: .
+      dockerfile: booking-service/Dockerfile
     container_name: booking-service
     ports:
       - "8080:8080"
@@ -54,7 +64,7 @@ services:
       MONGO_PASSWORD: secretpassword
       MONGO_PORT: 27017
       MONGO_DB: booking-service
-      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_URI: amqp://seuser:Passw0rd@rabbitmq:5672
       JWT_SECRET: changeme
       JWT_ISSUER: APP
       JWT_AUDIENCE: APP
@@ -65,7 +75,9 @@ services:
         condition: service_started
   
   car-service:
-    image: ghcr.io/michael-mezgo/hcw-se-backend-2/car-service:latest
+    build:
+      context: .
+      dockerfile: car-service/Dockerfile
     container_name: car-service
     ports:
       - "8081:8080"
@@ -76,10 +88,15 @@ services:
       MONGO_PASSWORD: secretpassword
       MONGO_PORT: 27017
       MONGO_DB: car-service
-      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_URI: amqp://seuser:Passw0rd@rabbitmq:5672
       JWT_SECRET: changeme
       JWT_ISSUER: APP
       JWT_AUDIENCE: APP
+      GRPC_HOST: currency-service
+      GRPC_PORT: 5125
+      GRPC_API_KEY: secret123
+      BLOB_CONTAINER_NAME: car-pictures
+      BLOB_CONNECTION_STRING: ${BLOB_CONNECTION_STRING}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -87,7 +104,9 @@ services:
         condition: service_started
 
   user-service:
-    image: ghcr.io/michael-mezgo/hcw-se-backend-2/user-service:latest
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
     container_name: user-service
     ports:
       - "8082:8080"
@@ -98,7 +117,7 @@ services:
       MONGO_PASSWORD: secretpassword
       MONGO_PORT: 27017
       MONGO_DB: user-service
-      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_URI: amqp://seuser:Passw0rd@rabbitmq:5672
       JWT_SECRET: changeme
       JWT_ISSUER: APP
       JWT_AUDIENCE: APP
@@ -107,7 +126,7 @@ services:
         condition: service_healthy
       mongo-user:
         condition: service_started
-
+  
 volumes:
   mongo-user-data:
   mongo-car-data:

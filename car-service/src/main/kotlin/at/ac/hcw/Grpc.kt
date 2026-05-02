@@ -1,10 +1,11 @@
 package at.ac.hcw
 
 import currency.CurrencyServiceGrpcKt
-import io.grpc.ManagedChannelBuilder
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import io.ktor.server.application.*
 import io.ktor.server.config.tryGetString
 import io.ktor.util.*
+import java.net.InetSocketAddress
 
 data class CurrencyClient(
     val stub: CurrencyServiceGrpcKt.CurrencyServiceCoroutineStub,
@@ -24,7 +25,7 @@ fun Application.configureGrpc() {
         if (it == null) log.warn("grpc.currency.apiKey not configured, using empty string")
     } ?: ""
 
-    val channel = ManagedChannelBuilder.forAddress(host, port)
+    val channel = NettyChannelBuilder.forAddress(InetSocketAddress(host, port))
         .usePlaintext()
         .build()
 
