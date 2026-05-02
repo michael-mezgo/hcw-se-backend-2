@@ -17,7 +17,7 @@ class MongoUserRepository(
     }
 
     override suspend fun findById(id: String): DatabaseUser? {
-        return collection.find(eq("id", id)).firstOrNull()
+        return collection.find(eq("_id", id)).firstOrNull()
     }
 
     override suspend fun findByUsername(username: String): DatabaseUser? {
@@ -34,12 +34,12 @@ class MongoUserRepository(
     }
 
     override suspend fun update(id: String, user: DatabaseUser): Boolean {
-        val result = collection.replaceOne(eq("id", id), user)
+        val result = collection.replaceOne(eq("_id", id), user)
         return result.modifiedCount > 0
     }
 
     override suspend fun delete(id: String): Boolean {
-        val result = collection.deleteOne(eq("id", id))
+        val result = collection.deleteOne(eq("_id", id))
         return result.deletedCount > 0
     }
 }

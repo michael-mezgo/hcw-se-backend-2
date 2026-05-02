@@ -1,15 +1,15 @@
 package at.ac.hcw.domain
 
 class Car (
-    val id: String? = null,
-    val manufacturer: String,
-    val model: String,
-    val year: Int,
-    val pricePerDay: Double,
-    val description: String,
-    val imageName: String,
-    val transmission: String,
-    val power: Int,
-    val fuelType: FuelType,
-    val available: Boolean = false
+    var id: String? = null,
+    var manufacturer: String = "",
+    var model: String = "",
+    var year: Int = 0,
+    var pricePerDay: Double = 0.0,
+    var description: String = "",
+    var imageName: String = "",
+    var transmission: String = "",
+    var power: Int = 0,
+    var fuelType: FuelType = FuelType.GASOLINE,
+    var available: Boolean = false
 )
