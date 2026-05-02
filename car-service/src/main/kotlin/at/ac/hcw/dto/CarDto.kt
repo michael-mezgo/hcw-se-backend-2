@@ -4,6 +4,7 @@ import at.ac.hcw.CurrencyClient
 import at.ac.hcw.service.BlobStorageService
 import at.ac.hcw.domain.Car
 import at.ac.hcw.domain.FuelType
+import at.ac.hcw.domain.Transmission
 import com.google.protobuf.Empty
 import currency.Currency
 import currency.CurrencyServiceGrpcKt
@@ -20,7 +21,7 @@ data class CarCreateRequest(
     val year: Int,
     val pricePerDayInUSD: Double,
     val description: String,
-    val transmission: String,
+    val transmission: Transmission,
     val power: Int,
     val fuelType: FuelType,
     val location: Location
@@ -34,7 +35,7 @@ data class CarPatchRequest(
     val pricePerDayInUSD: Double? = null,
     val description: String? = null,
     val imageName: String? = null,
-    val transmission: String? = null,
+    val transmission: Transmission? = null,
     val power: Int? = null,
     val fuelType: FuelType? = null,
     val location: Location? = null
@@ -49,7 +50,7 @@ data class CarResponse(
     val pricePerDay: CurrencyDto,
     val description: String,
     val imageUrl: String,
-    val transmission: String,
+    val transmission: Transmission,
     val power: Int,
     val fuelType: FuelType,
     val isAvailable: Boolean,
@@ -64,7 +65,7 @@ fun CarCreateRequest.toDomain(imageName: String): Car =
         pricePerDay = pricePerDayInUSD,
         description = description,
         imageName = imageName,
-        transmission = at.ac.hcw.domain.Transmission.valueOf(transmission),
+        transmission = transmission,
         power = power,
         fuelType = fuelType,
         available = true,
@@ -121,7 +122,7 @@ suspend fun Car.toResponse(
         pricePerDay = price,
         description = description,
         imageUrl = imageUrl ?: "",
-        transmission = transmission.name,
+        transmission = transmission,
         power = power,
         fuelType = fuelType,
         isAvailable = available,
