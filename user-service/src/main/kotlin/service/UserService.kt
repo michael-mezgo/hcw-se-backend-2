@@ -88,9 +88,8 @@ class UserService(
             isAdmin = dto.isAdmin ?: existing.isAdmin
         )
 
-        return if(userRepository.update(id, updated))
-            updated
-        else
-            null
+        val result = userRepository.update(id, updated)
+
+        return if (result) updated else null
     }
 }
