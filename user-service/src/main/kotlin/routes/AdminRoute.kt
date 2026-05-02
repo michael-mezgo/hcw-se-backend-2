@@ -11,6 +11,7 @@ import io.github.smiley4.ktorswaggerui.dsl.routing.patch
 import io.github.smiley4.ktorswaggerui.dsl.routing.post
 import io.ktor.http.*
 import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -84,7 +85,7 @@ fun Route.adminRoutes(
 
                     onUserCreated(user.toEvent())
 
-                    call.respond(HttpStatusCode.Created, mapOf("id" to user.id.toHexString()))
+                    call.respond(HttpStatusCode.Created, mapOf("id" to user.id))
                 } catch (e: MongoException) {
                     call.respond(HttpStatusCode.ServiceUnavailable, e.message ?: "Database Error!")
                 } catch (e: Exception) {
@@ -218,12 +219,13 @@ fun Route.adminRoutes(
                 }
             }) {
                 try {
-                    val principal = call.principal<JwtPrincipal>()!!
+                    val principal = call.principal<JWTPrincipal>()!!
+                    val adminId = principal.payload.getClaim("userId").asString()
 
                     val id = call.parameters["id"]
                         ?: return@delete call.respond(HttpStatusCode.BadRequest, "Missing id")
 
-                    if (id == principal.userId) {
+                    if (id == adminId) {
                         return@delete call.respond(
                             HttpStatusCode.Forbidden,
                             "Admins cannot delete themselves"

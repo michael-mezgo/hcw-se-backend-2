@@ -11,7 +11,7 @@ fun generateToken(user: DatabaseUser): String =
     JWT.create()
         .withIssuer(JwtConfig.issuer)
         .withAudience(JwtConfig.audience)
-        .withClaim("userId", user.id.toHexString())
+        .withClaim("userId", user.id)
         .withClaim("username", user.username)
         .withClaim("isAdmin", user.isAdmin)
         .withExpiresAt(Date(System.currentTimeMillis() + JWT_EXPIRY_MS))

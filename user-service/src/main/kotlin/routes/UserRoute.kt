@@ -10,6 +10,7 @@ import com.mongodb.MongoException
 import io.github.smiley4.ktorswaggerui.dsl.routing.*
 import io.ktor.http.*
 import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -58,7 +59,7 @@ fun Route.userRoutes(
 
                 onUserCreated(user.toEvent())
 
-                call.respond(HttpStatusCode.Created, mapOf("id" to user.id.toHexString()))
+                call.respond(HttpStatusCode.Created, mapOf("id" to user.id))
             } catch (e: UserExistsException) {
                 call.respond(HttpStatusCode.Conflict, e.message ?: "User already exists!")
             } catch (e: MongoException) {
@@ -140,8 +141,9 @@ fun Route.userRoutes(
                 }
             }) {
                 try {
-                    val principal = call.principal<JwtPrincipal>()!!
-                    val user = userService.findById(principal.userId)
+                    val principal = call.principal<JWTPrincipal>()!!
+                    val userId = principal.payload.getClaim("userId").asString()
+                    val user = userService.findById(userId)
                         ?: return@get call.respond(HttpStatusCode.NotFound)
 
                     call.respond(HttpStatusCode.OK, user.toResponse())
@@ -185,10 +187,11 @@ fun Route.userRoutes(
                 }
             }) {
                 try {
-                    val principal = call.principal<JwtPrincipal>()!!
+                    val principal = call.principal<JWTPrincipal>()!!
+                    val userId = principal.payload.getClaim("userId").asString()
                     val update = call.receive<UserUpdate>()
 
-                    val updated = userService.update(principal.userId, update)
+                    val updated = userService.update(userId, update)
                         ?: return@patch call.respond(HttpStatusCode.NotFound)
 
                     call.respond(HttpStatusCode.OK, updated.toResponse())
@@ -224,9 +227,10 @@ fun Route.userRoutes(
                 }
             }) {
                 try {
-                    val principal = call.principal<JwtPrincipal>()!!
+                    val principal = call.principal<JWTPrincipal>()!!
+                    val userId = principal.payload.getClaim("userId").asString()
 
-                    val deleted = userService.delete(principal.userId)
+                    val deleted = userService.delete(userId)
                         ?: return@delete call.respond(HttpStatusCode.NotFound)
 
                     onUserDeleted(deleted.toEvent())

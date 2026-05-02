@@ -22,7 +22,7 @@ fun Application.configureRouting() {
                         basicPublish {
                             exchange = "car-events"
                             routingKey = "car.created"
-                            message { Json.encodeToString(carEvent)}
+                            message { carEvent }
                         }
                     }
                 },

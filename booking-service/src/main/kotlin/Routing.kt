@@ -5,7 +5,6 @@ import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.basicPublish
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.rabbitmq
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.json.Json
 
 fun Application.configureRouting() {
     val bookingService = attributes[BookingServiceKey]
@@ -20,7 +19,7 @@ fun Application.configureRouting() {
                         basicPublish {
                             exchange = "booking-events"
                             routingKey = "booking.created"
-                            message { Json.encodeToString(event) }
+                            message { event }
                         }
                     }
                 },
@@ -29,7 +28,7 @@ fun Application.configureRouting() {
                         basicPublish {
                             exchange = "booking-events"
                             routingKey = "booking.deleted"
-                            message { Json.encodeToString(event) }
+                            message { event }
                         }
                     }
                 }

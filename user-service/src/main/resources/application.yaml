@@ -1,6 +1,6 @@
 ktor:
   deployment:
-    port: ${?PORT}
+    port: ${PORT}
   application:
     modules:
       - at.ac.hcw.HttpKt.configureHttp
@@ -14,6 +14,8 @@ ktor:
 
 db:
   mongo:
+    user: ${MONGO_USER}
+    password: ${MONGO_PASSWORD}
     host: ${MONGO_HOST}
     port: ${MONGO_PORT}
     database:

@@ -16,6 +16,8 @@ ktor:
 
 db:
   mongo:
+    user: $MONGO_USER
+    password: $MONGO_PASSWORD
     host: $MONGO_HOST
     port: $MONGO_PORT
     database:

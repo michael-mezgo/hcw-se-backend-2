@@ -13,6 +13,8 @@ ktor:
 
 db:
   mongo:
+    user: ${MONGO_USER}
+    password: ${MONGO_PASSWORD}
     host: ${MONGO_HOST}
     port: ${MONGO_PORT}
     database:
@@ -23,3 +25,5 @@ rabbitmq:
 
 jwt:
   secret: ${JWT_SECRET}
+  issuer: ${JWT_ISSUER}
+  audience: ${JWT_AUDIENCE}

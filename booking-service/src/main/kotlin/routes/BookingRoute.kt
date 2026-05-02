@@ -1,6 +1,5 @@
 package at.ac.hcw.routes
 
-import at.ac.hcw.JwtPrincipal
 import at.ac.hcw.dto.*
 import at.ac.hcw.exceptions.CarAlreadyBookedException
 import at.ac.hcw.exceptions.CarNotFoundException
@@ -15,6 +14,7 @@ import io.github.smiley4.ktorswaggerui.dsl.routing.get
 import io.github.smiley4.ktorswaggerui.dsl.routing.post
 import io.ktor.http.*
 import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -49,9 +49,10 @@ fun Route.bookingRoutes(
             }) {
                 try {
                     val request = call.receive<BookingRequest>()
-                    val principal = call.principal<JwtPrincipal>()!!
+                    val principal = call.principal<JWTPrincipal>()!!
+                    val principalUserId = principal.payload.getClaim("userId").asString()
 
-                    if(principal.userId != request.userId)
+                    if(principalUserId != request.userId)
                     {
                         call.respond(HttpStatusCode.Forbidden, "User doesn't have permission to create bookings for another user")
                         return@post
@@ -102,11 +103,13 @@ fun Route.bookingRoutes(
                     val id = call.parameters["id"]
                         ?: return@delete call.respond(HttpStatusCode.BadRequest, "Missing id")
 
-                    val principal = call.principal<JwtPrincipal>()!!
+                    val principal = call.principal<JWTPrincipal>()!!
+                    val principalUserId = principal.payload.getClaim("userId").asString()
+                    val isAdmin = principal.payload.getClaim("isAdmin").asBoolean() ?: false
                     val booking = bookingService.findById(id)
                         ?: return@delete call.respond(HttpStatusCode.NotFound, "Booking not found")
 
-                    if (!principal.isAdmin && booking.userId != principal.userId) {
+                    if (!isAdmin && booking.userId != principalUserId) {
                         return@delete call.respond(HttpStatusCode.Forbidden, "Not allowed to cancel another user's booking")
                     }
 
@@ -151,9 +154,11 @@ fun Route.bookingRoutes(
                     val userId = call.request.queryParameters["userId"]
                         ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing userId query parameter")
 
-                    val principal = call.principal<JwtPrincipal>()!!
+                    val principal = call.principal<JWTPrincipal>()!!
+                    val principalUserId = principal.payload.getClaim("userId").asString()
+                    val isAdmin = principal.payload.getClaim("isAdmin").asBoolean() ?: false
 
-                    if (!principal.isAdmin && principal.userId != userId) {
+                    if (!isAdmin && principalUserId != userId) {
                         return@get call.respond(HttpStatusCode.Forbidden, "Not allowed to view bookings of another user")
                     }
 
