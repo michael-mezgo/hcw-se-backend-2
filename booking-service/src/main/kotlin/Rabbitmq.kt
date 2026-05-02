@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.serialization.json.Json
 
 fun Application.configureRabbitmq() {
     val knownEntities = attributes[KnownEntitiesServiceKey]
@@ -75,10 +74,9 @@ fun Application.configureRabbitmq() {
             autoAck = true
             queue = "booking-service.user.created"
             dispatcher = Dispatchers.rabbitMQ
-            deliverCallback<String> { message ->
-                val event = Json.decodeFromString<UserEvent>(message.body)
-                knownEntities.addUser(event.userId)
-                log.info("User added to cache: ${event.userId}")
+            deliverCallback<UserEvent> { message ->
+                knownEntities.addUser(message.body.userId)
+                log.info("User added to cache: ${message.body.userId}")
             }
         }
     }
@@ -89,10 +87,9 @@ fun Application.configureRabbitmq() {
             autoAck = true
             queue = "booking-service.user.deleted"
             dispatcher = Dispatchers.rabbitMQ
-            deliverCallback<String> { message ->
-                val event = Json.decodeFromString<UserEvent>(message.body)
-                knownEntities.removeUser(event.userId)
-                log.info("User removed from cache: ${event.userId}")
+            deliverCallback<UserEvent> { message ->
+                knownEntities.removeUser(message.body.userId)
+                log.info("User removed from cache: ${message.body.userId}")
             }
         }
     }
@@ -103,10 +100,9 @@ fun Application.configureRabbitmq() {
             autoAck = true
             queue = "booking-service.car.created"
             dispatcher = Dispatchers.rabbitMQ
-            deliverCallback<String> { message ->
-                val event = Json.decodeFromString<CarEvent>(message.body)
-                knownEntities.addCar(event.carId)
-                log.info("Car added to cache: ${event.carId}")
+            deliverCallback<CarEvent> { message ->
+                knownEntities.addCar(message.body.carId)
+                log.info("Car added to cache: ${message.body.carId}")
             }
         }
     }
@@ -117,10 +113,9 @@ fun Application.configureRabbitmq() {
             autoAck = true
             queue = "booking-service.car.deleted"
             dispatcher = Dispatchers.rabbitMQ
-            deliverCallback<String> { message ->
-                val event = Json.decodeFromString<CarEvent>(message.body)
-                knownEntities.removeCar(event.carId)
-                log.info("Car removed from cache: ${event.carId}")
+            deliverCallback<CarEvent> { message ->
+                knownEntities.removeCar(message.body.carId)
+                log.info("Car removed from cache: ${message.body.carId}")
             }
         }
     }
