@@ -33,15 +33,22 @@ class UserService(
             licenseValidUntil = update.licenseValidUntil ?: existing.licenseValidUntil
         )
 
-        userRepository.update(id, updated)
-        return updated
+        val result = userRepository.update(id, updated)
+
+        if (result) {
+            return updated
+        } else {
+            return null
+        }
     }
 
     suspend fun delete(id: String): DatabaseUser? {
         val existing = userRepository.findById(id) ?: return null
 
-        userRepository.delete(id) // ✅ fix
-        return existing
+        return if (userRepository.delete(id))
+            existing
+        else
+            null
     }
 
     // ── ADMIN CREATE ──────────────────────────────────────

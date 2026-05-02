@@ -4,6 +4,8 @@ import at.ac.hcw.database.DatabaseUser
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters.eq
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MongoUserRepository(
     database: MongoDatabase
@@ -13,23 +15,34 @@ class MongoUserRepository(
         database.getCollection("users", DatabaseUser::class.java)
 
     override suspend fun findAll(): List<DatabaseUser> {
-        return collection.find().into(mutableListOf())
+        return withContext(Dispatchers.IO) {
+            return@withContext collection.find().into(mutableListOf())
+        }
     }
 
     override suspend fun findById(id: String): DatabaseUser? {
-        return collection.find(eq("_id", id)).firstOrNull()
+        return withContext(Dispatchers.IO) {
+            return@withContext collection.find(eq("_id", id)).firstOrNull()
+        }
+
     }
 
     override suspend fun findByUsername(username: String): DatabaseUser? {
-        return collection.find(eq("username", username)).firstOrNull()
+        return withContext(Dispatchers.IO) {
+            return@withContext collection.find(eq("username", username)).firstOrNull()
+        }
     }
 
     override suspend fun findByEmail(email: String): DatabaseUser? {
-        return collection.find(eq("email", email)).firstOrNull()
+        return withContext(Dispatchers.IO) {
+            return@withContext collection.find(eq("email", email)).firstOrNull()
+        }
     }
 
     override suspend fun create(user: DatabaseUser): String {
-        collection.insertOne(user)
+        withContext(Dispatchers.IO) {
+            return@withContext collection.insertOne(user)
+        }
         return user.id
     }
 
