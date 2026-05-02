@@ -40,11 +40,6 @@ fun Application.configureSecurity() {
                 val userId = credential.payload.getClaim("userId").asString()
                 val isAdmin = credential.payload.getClaim("isAdmin").asBoolean()
 
-                // 🔥 DEBUG
-                println("ADMIN-JWT userId = $userId")
-                println("ADMIN-JWT isAdmin = $isAdmin")
-                println("ADMIN-JWT claims = ${credential.payload.claims}")
-
                 if (userId != null && isAdmin == true) {
                     JWTPrincipal(credential.payload)
                 } else null

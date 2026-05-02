@@ -58,7 +58,7 @@ fun Route.userRoutes(
 
                 onUserCreated(user.toEvent())
 
-                call.respond(HttpStatusCode.Created, mapOf("id" to user.id.toHexString()))
+                call.respond(HttpStatusCode.Created, mapOf("id" to user.id))
             } catch (e: UserExistsException) {
                 call.respond(HttpStatusCode.Conflict, e.message ?: "User already exists!")
             } catch (e: MongoException) {

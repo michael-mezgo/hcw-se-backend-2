@@ -11,6 +11,7 @@ data class UserRegistration(
     val firstName: String,
     val lastName: String,
     val licenseNumber: String,
+    val preferredCurrency: String,
     /** ISO 8601 date string, e.g. "2030-12-31" */
     val licenseValidUntil: String,
 )
@@ -38,7 +39,7 @@ data class UserUpdate(
 /** Returned to the client — never includes the password hash. */
 @Serializable
 data class UserResponse(
-    val id: String,
+    val id: String?,
     val username: String,
     val email: String,
     val firstName: String,

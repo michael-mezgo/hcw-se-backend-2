@@ -11,11 +11,13 @@ import org.mindrot.jbcrypt.BCrypt
 class AuthService(
     private val userRepository: UserRepository
 ) {
-    private fun hashPassword(password: String): String = BCrypt.hashpw(password, BCrypt.gensalt())
+    private fun hashPassword(password: String): String =
+        BCrypt.hashpw(password, BCrypt.gensalt())
 
-    private fun checkPassword(password: String, hash: String): Boolean = BCrypt.checkpw(password, hash)
+    private fun checkPassword(password: String, hash: String): Boolean =
+        BCrypt.checkpw(password, hash)
 
-    fun register(dto: UserRegistration): DatabaseUser {
+    suspend fun register(dto: UserRegistration): DatabaseUser {
 
         val existsByUsername = userRepository.findByUsername(dto.username)
         if (existsByUsername != null) {
@@ -37,11 +39,11 @@ class AuthService(
             licenseValidUntil = dto.licenseValidUntil
         )
 
-        userRepository.save(user)
+        userRepository.create(user)
         return user
     }
 
-    fun login(dto: UserLoginRequest): LoginResponse {
+    suspend fun login(dto: UserLoginRequest): LoginResponse {
 
         val user = userRepository.findByUsername(dto.username)
             ?: throw UnauthorizedException(dto.username)
@@ -53,7 +55,7 @@ class AuthService(
         val token = generateToken(user)
 
         return LoginResponse(
-            userId = user.id.toHexString(),
+            userId = user.id,
             isAdmin = user.isAdmin,
             token = token
         )

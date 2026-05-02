@@ -10,17 +10,18 @@ import org.mindrot.jbcrypt.BCrypt
 class UserService(
     private val userRepository: UserRepository
 ) {
-    private fun hashPassword(password: String): String = BCrypt.hashpw(password, BCrypt.gensalt())
+    private fun hashPassword(password: String): String =
+        BCrypt.hashpw(password, BCrypt.gensalt())
 
-    fun findById(id: String): DatabaseUser? {
+    suspend fun findById(id: String): DatabaseUser? {
         return userRepository.findById(id)
     }
 
-    fun findAll(): List<DatabaseUser> {
+    suspend fun findAll(): List<DatabaseUser> {
         return userRepository.findAll()
     }
 
-    fun update(id: String, update: UserUpdate): DatabaseUser? {
+    suspend fun update(id: String, update: UserUpdate): DatabaseUser? {
         val existing = userRepository.findById(id) ?: return null
 
         val updated = existing.copy(
@@ -36,17 +37,16 @@ class UserService(
         return updated
     }
 
-    fun delete(id: String): DatabaseUser? {
+    suspend fun delete(id: String): DatabaseUser? {
         val existing = userRepository.findById(id) ?: return null
 
-        userRepository.deleteById(id)
-
+        userRepository.delete(id) // ✅ fix
         return existing
     }
 
     // ── ADMIN CREATE ──────────────────────────────────────
 
-    fun adminCreate(dto: AdminUserCreate): DatabaseUser {
+    suspend fun adminCreate(dto: AdminUserCreate): DatabaseUser {
 
         val user = DatabaseUser(
             username = dto.username,
@@ -59,14 +59,14 @@ class UserService(
             isAdmin = dto.isAdmin
         )
 
-        userRepository.save(user)
+        userRepository.create(user) // ✅ fix
 
         return user
     }
 
     // ── ADMIN UPDATE ──────────────────────────────────────
 
-    fun adminUpdate(id: String, dto: AdminUserUpdate): DatabaseUser? {
+    suspend fun adminUpdate(id: String, dto: AdminUserUpdate): DatabaseUser? {
 
         val existing = userRepository.findById(id) ?: return null
 
@@ -84,5 +84,4 @@ class UserService(
 
         return updated
     }
-
 }
