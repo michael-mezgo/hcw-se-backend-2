@@ -2,9 +2,10 @@ package at.ac.hcw.database
 
 import at.ac.hcw.dto.UserEvent
 import at.ac.hcw.dto.UserResponse
+import org.bson.codecs.pojo.annotations.BsonId
 
 data class DatabaseUser(
-    var id: String = java.util.UUID.randomUUID().toString(),
+    @BsonId var id: String = java.util.UUID.randomUUID().toString(),
     var username: String = "",
     var email: String = "",
     var passwordHash: String = "",

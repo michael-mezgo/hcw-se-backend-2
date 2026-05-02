@@ -49,7 +49,7 @@ class MongoUserRepository(
     override suspend fun update(id: String, user: DatabaseUser): Boolean {
         return withContext(Dispatchers.IO) {
             val result = collection.replaceOne(eq("_id", id), user)
-            return@withContext result.modifiedCount > 0
+            return@withContext result.matchedCount > 0
         }
     }
 
