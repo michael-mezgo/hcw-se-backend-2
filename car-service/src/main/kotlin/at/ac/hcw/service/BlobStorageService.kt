@@ -2,6 +2,9 @@ package at.ac.hcw.service
 
 import com.azure.storage.blob.BlobContainerClient
 import com.azure.storage.blob.BlobServiceClientBuilder
+import com.azure.storage.blob.sas.BlobSasPermission
+import com.azure.storage.blob.sas.BlobServiceSasSignatureValues
+import java.time.OffsetDateTime
 
 class BlobStorageService(
     connectionString: String,
@@ -25,7 +28,13 @@ class BlobStorageService(
     fun list(): List<String> =
         containerClient.listBlobs().map { it.name }
 
-    fun getUrl(blobName: String): String =
-        containerClient.getBlobClient(blobName).blobUrl
+    fun getUrl(blobName: String): String {
+        val blobClient = containerClient.getBlobClient(blobName)
+        val permissions = BlobSasPermission().setReadPermission(true)
+        val expiryTime = OffsetDateTime.now().plusHours(1)
+        val saasValues = BlobServiceSasSignatureValues(expiryTime, permissions).apply {  }
+        val saasToken = blobClient.generateSas(saasValues)
 
+        return "${blobClient.blobUrl}?$saasToken"
+    }
 }

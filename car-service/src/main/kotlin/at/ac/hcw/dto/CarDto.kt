@@ -1,16 +1,16 @@
 package at.ac.hcw.dto
 
 import at.ac.hcw.CurrencyClient
-import at.ac.hcw.service.BlobStorageService
 import at.ac.hcw.domain.Car
 import at.ac.hcw.domain.FuelType
 import at.ac.hcw.domain.Transmission
+import at.ac.hcw.service.BlobStorageService
 import com.google.protobuf.Empty
 import currency.Currency
 import currency.CurrencyServiceGrpcKt
 import io.grpc.Status
 import io.grpc.StatusException
-import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.plugins.*
 import kotlinx.serialization.Serializable
 import javax.naming.ServiceUnavailableException
 
@@ -35,7 +35,7 @@ data class CarPatchRequest(
     val pricePerDayInUSD: Double? = null,
     val description: String? = null,
     val imageName: String? = null,
-    val transmission: Transmission? = null,
+    val transmission: String? = null,
     val power: Int? = null,
     val fuelType: FuelType? = null,
     val location: Location? = null
