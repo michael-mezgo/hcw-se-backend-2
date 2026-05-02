@@ -48,6 +48,7 @@ data class UserResponse(
     val licenseNumber: String,
     val licenseValidUntil: String,
     val isAdmin: Boolean = false,
+    val preferredCurrency: String = "",
 )
 
 /** Sent by an admin when creating a new user account (optionally with admin privileges). */

@@ -23,7 +23,7 @@ fun Route.adminRoutes(
 ) {
     route("/create") { //TODO: remove in production
         get {
-            userService.adminCreate(
+            val user = userService.adminCreate(
                 AdminUserCreate(
                     username = "admin",
                     email = "test@test.at",
@@ -33,6 +33,7 @@ fun Route.adminRoutes(
                     licenseNumber = "123",
                     licenseValidUntil = "2030-12-31",
                     isAdmin = true))
+            onUserCreated(user.toEvent())
             call.respond(HttpStatusCode.Created)
         }
     }

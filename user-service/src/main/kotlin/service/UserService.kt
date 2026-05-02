@@ -30,7 +30,8 @@ class UserService(
             firstName = update.firstName ?: existing.firstName,
             lastName = update.lastName ?: existing.lastName,
             licenseNumber = update.licenseNumber ?: existing.licenseNumber,
-            licenseValidUntil = update.licenseValidUntil ?: existing.licenseValidUntil
+            licenseValidUntil = update.licenseValidUntil ?: existing.licenseValidUntil,
+            preferredCurrency = update.preferredCurrency ?: existing.preferredCurrency
         )
 
         val result = userRepository.update(id, updated)
