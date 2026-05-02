@@ -5,7 +5,9 @@ import com.mongodb.client.MongoDatabase
 import kotlinx.coroutines.Dispatchers
 import at.ac.hcw.domain.Car
 import at.ac.hcw.domain.FuelType
+import at.ac.hcw.domain.Transmission
 import at.ac.hcw.dto.CarPatchRequest
+import at.ac.hcw.dto.Location
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
@@ -89,13 +91,15 @@ class MongoCarRepository (
             .append("pricePerDay", pricePerDay)
             .append("description", description)
             .append("imageName", imageName)
-            .append("transmission", transmission)
+            .append("transmission", transmission.name)
             .append("power", power)
             .append("fuelType", fuelType.name)
             .append("available", available)
+            .append("location", Document("latitude", location.latitude).append("longitude", location.longitude))
 
-    private fun Document.toCar(): Car =
-        Car(
+    private fun Document.toCar(): Car {
+        val locationDoc = get("location") as? Document
+        return Car(
             id = getObjectId("_id")?.toHexString(),
             manufacturer = getString("manufacturer") ?: "",
             model = getString("model") ?: "",
@@ -103,7 +107,12 @@ class MongoCarRepository (
             pricePerDay = (get("pricePerDay") as? Number)?.toDouble() ?: 0.0,
             description = getString("description") ?: "",
             imageName = getString("imageName") ?: "",
-            transmission = getString("transmission") ?: "",
+            transmission = getString("transmission")?.let { raw ->
+                runCatching { Transmission.valueOf(raw) }.getOrElse {
+                    logger.warn("Invalid transmission value '$raw' in database, defaulting to ${Transmission.AUTOMATIC}")
+                    Transmission.AUTOMATIC
+                }
+            } ?: Transmission.AUTOMATIC,
             power = (get("power") as? Number)?.toInt() ?: 0,
             fuelType = getString("fuelType")?.let { raw ->
                 runCatching { FuelType.valueOf(raw) }.getOrElse {
@@ -111,8 +120,13 @@ class MongoCarRepository (
                     FuelType.GASOLINE
                 }
             } ?: FuelType.GASOLINE,
-            available = getBoolean("available") ?: false
+            available = getBoolean("available") ?: false,
+            location = Location(
+                latitude = (locationDoc?.get("latitude") as? Number)?.toDouble() ?: 0.0,
+                longitude = (locationDoc?.get("longitude") as? Number)?.toDouble() ?: 0.0
+            )
         )
+    }
 
     private fun CarPatchRequest.toUpdateDocument(): Document {
         val document = Document()
@@ -120,12 +134,12 @@ class MongoCarRepository (
         manufacturer?.let { document["manufacturer"] = it }
         model?.let { document["model"] = it }
         year?.let { document["year"] = it }
-        pricePerDay?.let { document["pricePerDay"] = it }
+        pricePerDayInUSD?.let { document["pricePerDay"] = it }
         description?.let { document["description"] = it }
-        imageName?.let { document["imageName"] = it }
         transmission?.let { document["transmission"] = it }
         power?.let { document["power"] = it }
         fuelType?.let { document["fuelType"] = it.name }
+        location?.let { document["location"] = Document("latitude", it.latitude).append("longitude", it.longitude) }
 
         return document
     }

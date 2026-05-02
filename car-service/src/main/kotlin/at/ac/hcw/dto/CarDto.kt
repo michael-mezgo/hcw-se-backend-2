@@ -18,11 +18,12 @@ data class CarCreateRequest(
     val manufacturer: String,
     val model: String,
     val year: Int,
-    val pricePerDay: Double,
+    val pricePerDayInUSD: Double,
     val description: String,
     val transmission: String,
     val power: Int,
-    val fuelType: FuelType
+    val fuelType: FuelType,
+    val location: Location
 )
 
 @Serializable
@@ -30,14 +31,14 @@ data class CarPatchRequest(
     val manufacturer: String? = null,
     val model: String? = null,
     val year: Int? = null,
-    val pricePerDay: Double? = null,
+    val pricePerDayInUSD: Double? = null,
     val description: String? = null,
     val imageName: String? = null,
     val transmission: String? = null,
     val power: Int? = null,
-    val fuelType: FuelType? = null
-) {
-}
+    val fuelType: FuelType? = null,
+    val location: Location? = null
+)
 
 @Serializable
 data class CarResponse(
@@ -47,11 +48,12 @@ data class CarResponse(
     val year: Int,
     val pricePerDay: CurrencyDto,
     val description: String,
-    val imageName: String,
+    val imageUrl: String,
     val transmission: String,
     val power: Int,
     val fuelType: FuelType,
-    val isAvailable: Boolean
+    val isAvailable: Boolean,
+    val location: Location
 )
 
 fun CarCreateRequest.toDomain(imageName: String): Car =
@@ -59,13 +61,14 @@ fun CarCreateRequest.toDomain(imageName: String): Car =
         manufacturer = manufacturer,
         model = model,
         year = year,
-        pricePerDay = pricePerDay,
+        pricePerDay = pricePerDayInUSD,
         description = description,
         imageName = imageName,
-        transmission = transmission,
+        transmission = at.ac.hcw.domain.Transmission.valueOf(transmission),
         power = power,
         fuelType = fuelType,
-        available = true
+        available = true,
+        location = location
     )
 
 private suspend fun CurrencyServiceGrpcKt.CurrencyServiceCoroutineStub.getSupportedCurrenciesList(): List<String> =
@@ -117,10 +120,11 @@ suspend fun Car.toResponse(
         year = year,
         pricePerDay = price,
         description = description,
-        imageName = imageUrl?: "",
-        transmission = transmission,
+        imageUrl = imageUrl ?: "",
+        transmission = transmission.name,
         power = power,
         fuelType = fuelType,
-        isAvailable = available
+        isAvailable = available,
+        location = location
     )
 }
