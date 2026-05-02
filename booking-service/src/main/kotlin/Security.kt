@@ -6,15 +6,16 @@ import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.config.tryGetString
 import io.ktor.server.response.*
 
-val JWT_SECRET: String = System.getenv("JWT_SECRET") ?: "car-rental-super-secret-key-change-me"
-const val JWT_ISSUER = "car-rental-service"
-const val JWT_AUDIENCE = "car-rental-users"
-
 fun Application.configureSecurity() {
-    val algorithm = Algorithm.HMAC256(JWT_SECRET)
-    val verifier = JWT.require(algorithm).withIssuer(JWT_ISSUER).withAudience(JWT_AUDIENCE).build()
+    val jwtSecret: String = environment.config.tryGetString("jwt.secret") ?: "car-rental-super-secret-key-change-me"
+    val jwtIssuer = environment.config.tryGetString("jwt.issuer") ?: "car-rental-service"
+    val jwtAudience = environment.config.tryGetString("jwt.audience") ?: "car-rental-users"
+
+    val algorithm = Algorithm.HMAC256(jwtSecret)
+    val verifier = JWT.require(algorithm).withIssuer(jwtIssuer).withAudience(jwtAudience).build()
 
     authentication {
         jwt("user-jwt") {

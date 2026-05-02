@@ -66,9 +66,10 @@ class UserService(
             isAdmin = dto.isAdmin
         )
 
-        userRepository.create(user) // ✅ fix
-
-        return user
+        if(userRepository.create(user)?.isNotBlank() ?: false)
+            return user
+        else
+            throw Exception("Failed to create user")
     }
 
     // ── ADMIN UPDATE ──────────────────────────────────────
@@ -87,8 +88,9 @@ class UserService(
             isAdmin = dto.isAdmin ?: existing.isAdmin
         )
 
-        userRepository.update(id, updated)
-
-        return updated
+        return if(userRepository.update(id, updated))
+            updated
+        else
+            null
     }
 }
