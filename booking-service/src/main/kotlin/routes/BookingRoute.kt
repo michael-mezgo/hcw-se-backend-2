@@ -2,6 +2,7 @@ package at.ac.hcw.routes
 
 import at.ac.hcw.dto.*
 import at.ac.hcw.exceptions.CarAlreadyBookedException
+import at.ac.hcw.exceptions.CarNotBookedException
 import at.ac.hcw.exceptions.CarNotFoundException
 import at.ac.hcw.exceptions.UserNotFoundException
 import at.ac.hcw.model.toCancelledEvent
@@ -113,12 +114,14 @@ fun Route.bookingRoutes(
                         return@delete call.respond(HttpStatusCode.Forbidden, "Not allowed to cancel another user's booking")
                     }
 
-                    val cancelled = bookingService.cancel(id)!!
+                    val cancelled = bookingService.cancel(id)
                     onBookingCancelled(cancelled.toCancelledEvent())
                     call.respond(HttpStatusCode.OK, cancelled.toResponse())
                 } catch (e: MongoException) {
                     println("Error: ${e.message}")
                     call.respond(HttpStatusCode.ServiceUnavailable, "Database error")
+                } catch (e: CarNotBookedException) {
+                    call.respond(HttpStatusCode.NotFound, e.message ?: "Booking not found")
                 } catch (e: IllegalArgumentException) {
                     println("Error: ${e.message}")
                     call.respond(HttpStatusCode.BadRequest, e.message ?: "Bad request")

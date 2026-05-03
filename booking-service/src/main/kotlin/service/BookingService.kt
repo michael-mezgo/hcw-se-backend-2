@@ -4,6 +4,7 @@ import at.ac.hcw.exceptions.CarAlreadyBookedException
 import at.ac.hcw.exceptions.CarNotFoundException
 import at.ac.hcw.exceptions.UserNotFoundException
 import at.ac.hcw.dto.*
+import at.ac.hcw.exceptions.CarNotBookedException
 import at.ac.hcw.model.Booking
 import at.ac.hcw.repository.BookingRepositoryInterface
 
@@ -26,8 +27,10 @@ class BookingService(
     suspend fun findById(id: String): Booking? =
         repository.findById(id)
 
-    suspend fun cancel(id: String): Booking? =
-        repository.deleteById(id)
+    suspend fun cancel(id: String): Booking {
+        return repository.deleteById(id) ?: throw CarNotBookedException(id)
+    }
+
 
     suspend fun findByUser(userId: String): List<Booking> =
         repository.findByUserId(userId)
