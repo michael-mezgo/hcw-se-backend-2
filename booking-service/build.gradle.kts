@@ -37,4 +37,6 @@ dependencies {
     implementation("at.ac.hcw:shared-events:1.0.0-SNAPSHOT")
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
+    testImplementation(libs.mockk)
+    testImplementation(libs.coroutines.test)
 }

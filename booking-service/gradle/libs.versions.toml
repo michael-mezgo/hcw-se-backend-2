@@ -3,10 +3,14 @@ kotlin = "2.3.20"
 ktor = "3.4.1"
 logback = "1.5.21"
 mongodb = "4.11.5"
+mockk = "1.13.12"
+coroutines = "1.10.2"
 
 [libraries]
 damirdenis-tudor-ktorServerRabbitmq = { module = "io.github.damirdenis-tudor:ktor-server-rabbitmq", version = "1.5.0" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 mongodb-bson = { module = "org.mongodb:bson", version.ref = "mongodb" }
 mongodb-driverCore = { module = "org.mongodb:mongodb-driver-core", version.ref = "mongodb" }
 mongodb-driverSync = { module = "org.mongodb:mongodb-driver-sync", version.ref = "mongodb" }
