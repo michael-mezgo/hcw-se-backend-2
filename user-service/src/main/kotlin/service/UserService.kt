@@ -86,7 +86,8 @@ class UserService(
             lastName = dto.lastName ?: existing.lastName,
             licenseNumber = dto.licenseNumber ?: existing.licenseNumber,
             licenseValidUntil = dto.licenseValidUntil ?: existing.licenseValidUntil,
-            isAdmin = dto.isAdmin ?: existing.isAdmin
+            isAdmin = dto.isAdmin ?: existing.isAdmin,
+            preferredCurrency = dto.preferredCurrency ?: existing.preferredCurrency
         )
 
         val result = userRepository.update(id, updated)

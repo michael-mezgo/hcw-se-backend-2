@@ -74,4 +74,5 @@ data class AdminUserUpdate(
     val licenseNumber: String? = null,
     val licenseValidUntil: String? = null,
     val isAdmin: Boolean? = null,
+    val preferredCurrency: String? = null,
 )
