@@ -21,7 +21,7 @@ fun Route.adminRoutes(
     onUserCreated: suspend (UserEvent) -> Unit = {},
     onUserDeleted: suspend (UserEvent) -> Unit = {}
 ) {
-    route("/create") { //TODO: remove in production
+    /*route("/create") { //TODO: remove in production
         get {
             val user = userService.adminCreate(
                 AdminUserCreate(
@@ -36,10 +36,8 @@ fun Route.adminRoutes(
             onUserCreated(user.toEvent())
             call.respond(HttpStatusCode.Created)
         }
-    }
-
+    }*/
     authenticate("admin-jwt") {
-
         route("/users") {
 
             // GET ALL USERS
