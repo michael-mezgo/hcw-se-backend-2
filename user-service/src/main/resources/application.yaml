@@ -8,6 +8,7 @@ ktor:
       - at.ac.hcw.security.JwtValidatorKt.configureSecurity
       - at.ac.hcw.MongoKt.configureMongo
       - at.ac.hcw.RabbitmqKt.configureRabbitmq
+      - at.ac.hcw.SeedKt.configureSeed
       - at.ac.hcw.ResourcesKt.configureResources
       - at.ac.hcw.RoutingKt.configureRouting
       - at.ac.hcw.OpenApiKt.configureOpenApi
