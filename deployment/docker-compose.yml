@@ -33,6 +33,7 @@ services:
       ECB_URL: https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml
       API_KEY: ${CURRENCY_API_KEY}
       PORT: 5125
+    restart: unless-stopped
 
   mongo-user:
     image: mongodb/mongodb-community-server:latest-slim
@@ -43,6 +44,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${USER_MONGO_PASSWORD}
     volumes:
       - mongo-user-data:/data/db
+    restart: unless-stopped
 
   mongo-car:
     image: mongodb/mongodb-community-server:latest-slim
@@ -53,6 +55,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${CAR_MONGO_PASSWORD}
     volumes:
       - mongo-car-data:/data/db
+    restart: unless-stopped
 
   mongo-booking:
     image: mongodb/mongodb-community-server:latest-slim
@@ -63,6 +66,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${BOOKING_MONGO_PASSWORD}
     volumes:
       - mongo-booking-data:/data/db
+    restart: unless-stopped
 
   booking-service:
     image: ghcr.io/michael-mezgo/hcw-se-backend-2/booking-service:latest
@@ -83,6 +87,7 @@ services:
         condition: service_healthy
       mongo-booking:
         condition: service_started
+    restart: unless-stopped
   
   car-service:
     image: ghcr.io/michael-mezgo/hcw-se-backend-2/car-service:latest
@@ -108,6 +113,7 @@ services:
         condition: service_healthy
       mongo-car:
         condition: service_started
+    restart: unless-stopped
 
   user-service:
     image: ghcr.io/michael-mezgo/hcw-se-backend-2/user-service:latest
@@ -128,12 +134,11 @@ services:
         condition: service_healthy
       mongo-user:
         condition: service_started
+    restart: unless-stopped
 
   frontend:
     image: ghcr.io/michael-mezgo/hcw-se-frontend-2:latest
     container_name: frontend
-    ports:
-      - "80:80"
     environment:
       USER_SERVICE_URL: http://user-service:8080
       CAR_SERVICE_URL: http://car-service:8080
@@ -143,6 +148,7 @@ services:
       - user-service
       - car-service
       - booking-service
+    restart: unless-stopped
 
 volumes:
   mongo-user-data:
