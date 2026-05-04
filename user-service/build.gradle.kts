@@ -40,4 +40,6 @@ dependencies {
     implementation("io.github.smiley4:ktor-swagger-ui:${swagger_ui_version}")
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
+    testImplementation(libs.mockk)
+    testImplementation(libs.coroutines.test)
 }
