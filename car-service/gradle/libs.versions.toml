@@ -6,6 +6,8 @@ mongodb = "4.11.5"
 grpc = "1.68.1"
 grpc-kotlin = "1.4.1"
 protobuf = "3.25.5"
+mockk = "1.13.12"
+coroutines = "1.10.2"
 
 [libraries]
 damirdenis-tudor-ktorServerRabbitmq = { module = "io.github.damirdenis-tudor:ktor-server-rabbitmq", version = "1.5.0" }
@@ -17,6 +19,8 @@ grpc-kotlin-stub = { module = "io.grpc:grpc-kotlin-stub", version.ref = "grpc-ko
 grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }
 grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpc" }
 protobuf-kotlin = { module = "com.google.protobuf:protobuf-kotlin", version.ref = "protobuf" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

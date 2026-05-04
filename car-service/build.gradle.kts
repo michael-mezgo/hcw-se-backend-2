@@ -52,6 +52,8 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
+    testImplementation(libs.mockk)
+    testImplementation(libs.coroutines.test)
 }
 
 protobuf {
