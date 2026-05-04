@@ -1,3 +1,7 @@
+# Archive note
+
+This repo has been archived on 2026-05-04.
+
 # booking-service
 
 This project was created using the [Ktor Project Generator](https://start.ktor.io).
